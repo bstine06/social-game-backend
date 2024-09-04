@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 
 @RestController
-@CrossOrigin(origins = "http://192.168.4.98:3000", allowCredentials = "true")
+@CrossOrigin(origins = "${frontend.url}", allowCredentials = "true")
 public class TestController {
 
     private static final Logger logger = LoggerFactory.getLogger(TestController.class);
