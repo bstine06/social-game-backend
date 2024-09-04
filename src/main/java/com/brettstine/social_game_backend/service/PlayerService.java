@@ -5,6 +5,7 @@ import com.brettstine.social_game_backend.model.SessionModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,4 +38,9 @@ public class PlayerService {
     public PlayerModel getPlayerBySessionId(String sessionId) {
         return players.get(sessionId);
     }
+
+    public Collection<PlayerModel> getAllPlayers() {
+        return players.values();
+    }
+
 }
