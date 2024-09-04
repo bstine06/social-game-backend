@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
 @RestController
 @CrossOrigin(origins = "${frontend.url}", allowCredentials = "true")
 public class SessionController {
@@ -25,7 +27,7 @@ public class SessionController {
     }
 
     @GetMapping("/set-session")
-    public ResponseEntity<String> setSession(HttpServletResponse response) {
+    public ResponseEntity<Map<String, String>> setSession(HttpServletResponse response) {
         SessionModel session = sessionService.createSession();
         String sessionId = session.getSessionId();
         
@@ -45,11 +47,13 @@ public class SessionController {
 
         response.addCookie(cookie);
         logger.info("Session cookie set with ID: {}", sessionId);
-        return ResponseEntity.ok("Session cookie set with ID: " + sessionId);
+
+        // Create a JSON response with session information
+        return ResponseEntity.ok(Map.of("message", "Session cookie set with ID: " + sessionId));
     }
 
     @GetMapping("/get-session")
-    public ResponseEntity<String> getSession(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<Map<String, String>> getSession(HttpServletRequest request, HttpServletResponse response) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -57,12 +61,17 @@ public class SessionController {
                     String sessionId = cookie.getValue();
                     SessionModel session = sessionService.getSession(sessionId);
                     if (session != null) {
-                        return ResponseEntity.ok("Session ID: " + session.getSessionId() + ", Data: " + session.getSessionData());
+                        // Return session information as JSON
+                        return ResponseEntity.ok(Map.of(
+                            "sessionId", session.getSessionId(),
+                            "sessionData", session.getSessionData()
+                        ));
                     }
                 }
             }
         }
-        // If no valid session ID was found, create a new session
+
+        // If no valid session ID was found, create a new session and return the response
         return setSession(response);
     }
 }
