@@ -46,6 +46,12 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>jakarta.platform</groupId>
+			<artifactId>jakarta.jakartaee-api</artifactId>
+			<version>10.0.0</version> <!-- or a version compatible with your Spring Boot version -->
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
