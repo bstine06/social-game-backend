@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+@CrossOrigin(origins = "http://192.168.4.98:3000", allowCredentials = "true")
 public class TestController {
 
     private static final Logger logger = LoggerFactory.getLogger(TestController.class);
@@ -30,7 +30,7 @@ public class TestController {
         Cookie cookie = new Cookie("sessionId", sessionId);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        
+
         cookie.setMaxAge(5); // 5 seconds. Use only for debugging
         // cookie.setMaxAge(60 * 60); // 1 hour
 
