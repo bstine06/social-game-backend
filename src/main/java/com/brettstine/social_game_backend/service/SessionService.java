@@ -14,7 +14,7 @@ public class SessionService {
 
     public SessionModel createSession() {
         String sessionId = UUID.randomUUID().toString();
-        SessionModel session = new SessionModel(sessionId, "Some session data");
+        SessionModel session = new SessionModel(sessionId);
         sessions.put(sessionId, session);
         return session;
     }

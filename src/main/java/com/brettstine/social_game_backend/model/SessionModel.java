@@ -7,9 +7,8 @@ public class SessionModel {
     // Constructors
     public SessionModel() {}
 
-    public SessionModel(String sessionId, String sessionData) {
+    public SessionModel(String sessionId) {
         this.sessionId = sessionId;
-        this.sessionData = sessionData;
     }
 
     // Getters and Setters
@@ -19,13 +18,5 @@ public class SessionModel {
 
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
-    }
-
-    public String getSessionData() {
-        return sessionData;
-    }
-
-    public void setSessionData(String sessionData) {
-        this.sessionData = sessionData;
     }
 }

@@ -63,8 +63,7 @@ public class SessionController {
                     if (session != null) {
                         // Return session information as JSON
                         return ResponseEntity.ok(Map.of(
-                            "sessionId", session.getSessionId(),
-                            "sessionData", session.getSessionData()
+                            "sessionId", session.getSessionId()
                         ));
                     }
                 }
