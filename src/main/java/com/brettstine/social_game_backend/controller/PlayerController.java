@@ -1,5 +1,6 @@
 package com.brettstine.social_game_backend.controller;
 
+import com.brettstine.social_game_backend.model.ErrorResponse;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.SessionModel;
 import com.brettstine.social_game_backend.service.PlayerService;
@@ -66,44 +67,41 @@ public class PlayerController {
   }
 
   @GetMapping("/get-player")
-    public ResponseEntity<Map<String, String>> getPlayer(HttpServletRequest request) {
-        // Retrieve session ID from cookie
-        String sessionId = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("sessionId".equals(cookie.getName())) {
-                    sessionId = cookie.getValue();
-                    break;
-                }
-            }
+  public ResponseEntity<?> getPlayer(HttpServletRequest request) {
+    // Retrieve session ID from cookie
+    String sessionId = null;
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if ("sessionId".equals(cookie.getName())) {
+          sessionId = cookie.getValue();
+          break;
         }
-
-        if (sessionId == null) {
-            return ResponseEntity.status(400).body(Map.of("error", "No session found"));
-        }
-
-        // Use the session ID to retrieve player information
-        SessionModel session = sessionService.getSession(sessionId);
-        if (session == null) {
-            return ResponseEntity.status(400).body(Map.of("error", "Invalid session ID"));
-        }
-
-        PlayerModel player = playerService.getPlayerBySessionId(sessionId);
-        if (player != null) {
-            return ResponseEntity.ok(Map.of(
-                "sessionId", player.getSessionId(),
-                "playerName", player.getPlayerName()
-            ));
-        }
-
-        return ResponseEntity.status(404).body(Map.of("error", "Player not found"));
+      }
     }
 
-    @GetMapping("/get-all-players")
-    public ResponseEntity<Collection<PlayerModel>> getAllPlayers() {
-        Collection<PlayerModel> allPlayers = playerService.getAllPlayers();
-        return ResponseEntity.ok(allPlayers);
+    if (sessionId == null) {
+      return ResponseEntity.status(400).body(new ErrorResponse("No session found"));
     }
+
+    // Use the session ID to retrieve player information
+    SessionModel session = sessionService.getSession(sessionId);
+    if (session == null) {
+      return ResponseEntity.status(400).body(new ErrorResponse("Invalid session ID"));
+    }
+
+    PlayerModel player = playerService.getPlayerBySessionId(sessionId);
+    if (player != null) {
+      return ResponseEntity.ok(player); // Spring Boot will serialize this to JSON
+    }
+
+    return ResponseEntity.status(404).body(new ErrorResponse("Player not found"));
+  }
+
+  @GetMapping("/get-all-players")
+  public ResponseEntity<Collection<PlayerModel>> getAllPlayers() {
+    Collection<PlayerModel> allPlayers = playerService.getAllPlayers();
+    return ResponseEntity.ok(allPlayers);
+  }
 
 }
