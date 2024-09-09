@@ -1,22 +1,20 @@
 package com.brettstine.social_game_backend.model;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PlayerModel {
   private String playerName;
-  private int playerId;
-  private String sessionId;
+  private boolean hostPlayer;
 
-  private static final AtomicInteger playerCounter = new AtomicInteger(0);
+  private static final AtomicBoolean hostPlayerFlag = new AtomicBoolean(false);
 
   // Constructors
   public PlayerModel() {
   }
 
-  public PlayerModel(String playerName, String sessionId) {
+  public PlayerModel(String playerName) {
     this.playerName = playerName;
-    this.sessionId = sessionId;
-    this.playerId = playerCounter.incrementAndGet();
+    this.hostPlayer = hostPlayerFlag.getAndSet(false);
   }
 
   // Getters and Setters
@@ -28,19 +26,11 @@ public class PlayerModel {
     this.playerName = playerName;
   }
 
-  public String getSessionId() {
-    return sessionId;
+  public boolean isHostPlayer() {
+    return hostPlayer;
   }
 
-  public void setSessionId(String sessionId) {
-    this.sessionId = sessionId;
-  }
-
-  public int getPlayerId() {
-    return playerId;
-  }
-
-  public static void resetPlayerCounter() {
-    playerCounter.set(0);
+  public static void resetHostPlayerFlag() {
+    hostPlayerFlag.set(true);
   }
 }
