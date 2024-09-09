@@ -1,7 +1,5 @@
 package com.brettstine.social_game_backend.model;
 
-import com.brettstine.social_game_backend.model.PlayerModel;
-
 public class SessionModel {
     private String sessionId;
     private PlayerModel playerModel;

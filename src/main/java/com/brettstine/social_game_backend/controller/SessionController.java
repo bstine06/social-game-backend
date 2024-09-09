@@ -57,7 +57,7 @@ public class SessionController {
     }
 
     @GetMapping("/get-session")
-    public ResponseEntity<Map<String, String>> getSession(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> getSession(HttpServletRequest request, HttpServletResponse response) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -66,8 +66,7 @@ public class SessionController {
                     SessionModel session = sessionService.getSession(sessionId);
                     if (session != null) {
                         // Return session information as JSON
-                        return ResponseEntity.ok(Map.of(
-                                "sessionId", session.getSessionId()));
+                        return ResponseEntity.ok(session);
                     }
                 }
             }
@@ -77,10 +76,6 @@ public class SessionController {
         // response
         return setSession(response);
     }
-
-
-
-
 
     @PostMapping("/add-player")
     public ResponseEntity<Map<String, String>> addPlayer(HttpServletRequest request,
@@ -104,46 +99,14 @@ public class SessionController {
 
         try {
             SessionModel session = sessionService.setPlayer(sessionId, playerName);
-            logger.info("Player created: " + session.getPlayer().getPlayerName());
-            return ResponseEntity.ok(Map.of("message", "Player created: " + session.getPlayer().getPlayerName()));
+            logger.info("Set Player: " + session.getPlayer().getPlayerName());
+            return ResponseEntity.ok(Map.of("message", "Set Player: " + session.getPlayer().getPlayerName()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
         }
     }
-
-    // @GetMapping("/get-player")
-    // public ResponseEntity<?> getPlayer(HttpServletRequest request) {
-    //     // Retrieve session ID from cookie
-    //     String sessionId = null;
-    //     Cookie[] cookies = request.getCookies();
-    //     if (cookies != null) {
-    //         for (Cookie cookie : cookies) {
-    //             if ("sessionId".equals(cookie.getName())) {
-    //                 sessionId = cookie.getValue();
-    //                 break;
-    //             }
-    //         }
-    //     }
-
-    //     if (sessionId == null) {
-    //         return ResponseEntity.status(400).body(new ErrorResponse("No session found"));
-    //     }
-
-    //     // Use the session ID to retrieve player information
-    //     SessionModel session = sessionService.getSession(sessionId);
-    //     if (session == null) {
-    //         return ResponseEntity.status(400).body(new ErrorResponse("Invalid session ID"));
-    //     }
-
-    //     PlayerModel player = playerService.getPlayerBySessionId(sessionId);
-    //     if (player != null) {
-    //         return ResponseEntity.ok(player); // Spring Boot will serialize this to JSON
-    //     }
-
-    //     return ResponseEntity.status(404).body(new ErrorResponse("Player not found"));
-    // }
 
     @GetMapping("/get-all-sessions")
     public ResponseEntity<Collection<SessionModel>> getAllPlayers() {
