@@ -2,7 +2,6 @@ package com.brettstine.social_game_backend.model;
 
 public class SessionModel {
     private String sessionId;
-    private String sessionData;
 
     // Constructors
     public SessionModel() {}
