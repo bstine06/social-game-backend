@@ -6,7 +6,7 @@ public class PlayerModel {
   private String playerName;
   private boolean hostPlayer;
 
-  private static final AtomicBoolean hostPlayerFlag = new AtomicBoolean(false);
+  private static final AtomicBoolean hostPlayerFlag = new AtomicBoolean(true);
 
   // Constructors
   public PlayerModel() {
