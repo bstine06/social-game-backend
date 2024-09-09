@@ -30,9 +30,19 @@ public class SessionService {
     }
 
     public SessionModel setPlayer(String sessionId, String playerName) {
-        // Create a new player
-        PlayerModel player = new PlayerModel(playerName);
+
+        PlayerModel player;
+
+        // Check if a player already exists for this session
         SessionModel session = sessions.get(sessionId);
+        if (session.getPlayer() != null) {
+            player = session.getPlayer();
+            player.setPlayerName(playerName);
+            return session;
+        }
+
+        // Create a new player & add to session
+        player = new PlayerModel(playerName);
         session.setPlayer(player);
         return session;
     }
