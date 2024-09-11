@@ -2,7 +2,7 @@ package com.brettstine.social_game_backend.model;
 
 public class SessionModel {
     private String sessionId;
-    private PlayerModel playerModel;
+    private String name;
 
     // Constructors
     public SessionModel() {}
@@ -11,9 +11,9 @@ public class SessionModel {
         this.sessionId = sessionId;
     }
 
-    public SessionModel(String sessionId, PlayerModel player) {
+    public SessionModel(String sessionId, String name) {
         this.sessionId = sessionId;
-        this.playerModel = player;
+        this.name = name;
     }
 
     // Getters and Setters
@@ -25,11 +25,11 @@ public class SessionModel {
         this.sessionId = sessionId;
     }
 
-    public PlayerModel getPlayer() {
-        return playerModel;
+    public String getName() {
+        return name;
     }
 
-    public void setPlayer(PlayerModel playerModel) {
-        this.playerModel = playerModel;
+    public void setName(String name) {
+        this.name = name;
     }
 }

@@ -77,10 +77,10 @@ public class SessionController {
         return setSession(response);
     }
 
-    @PostMapping("/add-player")
-    public ResponseEntity<Map<String, String>> addPlayer(HttpServletRequest request,
+    @PostMapping("/set-name")
+    public ResponseEntity<Map<String, String>> setName(HttpServletRequest request,
             @RequestBody Map<String, String> payload) {
-        String playerName = payload.get("playerName");
+        String name = payload.get("name");
         // Retrieve session ID from cookie
         String sessionId = null;
         Cookie[] cookies = request.getCookies();
@@ -98,9 +98,9 @@ public class SessionController {
         }
 
         try {
-            SessionModel session = sessionService.setPlayer(sessionId, playerName);
-            logger.info("Set Player: " + session.getPlayer().getPlayerName());
-            return ResponseEntity.ok(Map.of("message", "Set Player: " + session.getPlayer().getPlayerName()));
+            SessionModel session = sessionService.setName(sessionId, name);
+            logger.info("Set Name '" + session.getName() + "' on session: " + sessionId);
+            return ResponseEntity.ok(Map.of("message", "Set Name '" + session.getName() + "' on session: " + sessionId));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
@@ -109,7 +109,7 @@ public class SessionController {
     }
 
     @GetMapping("/get-all-sessions")
-    public ResponseEntity<Collection<SessionModel>> getAllPlayers() {
+    public ResponseEntity<Collection<SessionModel>> getAllSessions() {
         Collection<SessionModel> allSessions = sessionService.getAllSessions();
         return ResponseEntity.ok(allSessions);
     }

@@ -1,6 +1,5 @@
 package com.brettstine.social_game_backend.service;
 
-import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.SessionModel;
 import org.springframework.stereotype.Service;
 
@@ -29,21 +28,9 @@ public class SessionService {
         sessions.remove(sessionId);
     }
 
-    public SessionModel setPlayer(String sessionId, String playerName) {
-
-        PlayerModel player;
-
-        // Check if a player already exists for this session
+    public SessionModel setName(String sessionId, String name) {
         SessionModel session = sessions.get(sessionId);
-        if (session.getPlayer() != null) {
-            player = session.getPlayer();
-            player.setPlayerName(playerName);
-            return session;
-        }
-
-        // Create a new player & add to session
-        player = new PlayerModel(playerName);
-        session.setPlayer(player);
+        session.setName(name);
         return session;
     }
 
@@ -52,9 +39,6 @@ public class SessionService {
     }
 
     public void clearAllSessions() {
-        // remove every player from players Map
         sessions.clear();
-        // reset playerCounter to 0
-        PlayerModel.resetHostPlayerFlag();
     }
 }
