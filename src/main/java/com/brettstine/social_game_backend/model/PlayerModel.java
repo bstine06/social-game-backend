@@ -5,66 +5,67 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.brettstine.social_game_backend.model.ConversationModel;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 public class PlayerModel {
-    private SessionModel session;
-    private ConversationModel submittedQuestion = new ConversationModel(session);
-    private List<ConversationModel> questionsToAnswer = new ArrayList<>();
-    private Map<ConversationModel, ConversationModel> answers = new HashMap<>(); // question -> answer
+    private String sessionId;
+    private String name;
+    private String submittedQuestionId = null;
+    private List<String> questionIdsToAnswer = new ArrayList<>();
+    private Map<String, String> answerIdsForQuestionIds = new HashMap<>();
 
     // Constructor
-    public PlayerModel(SessionModel session) {
-        this.session = session;
+    public PlayerModel(String sessionId, String name) {
+        this.sessionId = sessionId;
+        this.name = name;
     }
 
     // Getters and Setters
-    public SessionModel getSession() {
-        return session;
-    }
-
-    @JsonIgnore
     public String getSessionId() {
-        return session.getSessionId();
+        return sessionId;
     }
 
-    @JsonIgnore
     public String getName() {
-      return session.getName();
+        return name;
     }
 
-    public ConversationModel getSubmittedQuestion() {
-        return submittedQuestion;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public void setSubmittedQuestion(ConversationModel submittedQuestion) {
-        this.submittedQuestion = submittedQuestion;
+    public String getSubmittedQuestionId() {
+        return submittedQuestionId;
     }
 
-    public List<ConversationModel> getQuestionsToAnswer() {
-        return questionsToAnswer;
+    public void setSubmittedQuestionId(String questionId) {
+        this.submittedQuestionId = questionId;
     }
 
-    public void addQuestionToAnswer(ConversationModel questionToAnswer) {
-        this.questionsToAnswer.add(questionToAnswer);
+    public List<String> getQuestionIdsToAnswer() {
+        return questionIdsToAnswer;
     }
 
-    public Map<ConversationModel, ConversationModel> getAnswers() {
-        return answers;
+    public void addQuestionIdToAnswer(String questionId) {
+        this.questionIdsToAnswer.add(questionId);
     }
 
-    public void setAnswers(Map<ConversationModel, ConversationModel> answers) {
-        this.answers = answers;
+    public Map<String, String> getAnswerIdsForQuestionIds() {
+        return answerIdsForQuestionIds;
+    }
+
+    public void setAnswerIdsForQuestionIds(Map<String, String> answerIdsForQuestionIds) {
+        this.answerIdsForQuestionIds = answerIdsForQuestionIds;
     }
 
     // Additional Methods
-    public void addAnswer(ConversationModel question, ConversationModel answer) {
-        this.answers.put(question, answer);
+    public void addAnswerIdforQuestionId(String questionId, String answerId) {
+        this.answerIdsForQuestionIds.put(questionId, answerId);
     }
 
-    public ConversationModel getAnswer(ConversationModel question) {
-        return this.answers.get(question);
+    // Method to find the associated answer for a given question
+    public String getAnswerIdForQuestionId(String questionId) {
+        String answerId = answerIdsForQuestionIds.get(questionId);
+        if (answerId == null) {
+            return null; // or throw new NoSuchElementException("No answer found for the given question");
+        }
+        return answerId;
     }
 }

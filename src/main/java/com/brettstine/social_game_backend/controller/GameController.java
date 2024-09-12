@@ -42,7 +42,7 @@ public class GameController {
 
   @PostMapping("/submit-question")
   public ResponseEntity<?> submitQuestions(HttpServletRequest request, @RequestBody Map<String, String> payload) {
-    if (!gameService.confirmGameState("submitQuestions")) {
+    if (!gameService.confirmGameState("asking")) {
       return ResponseEntity.status(409).body(Map.of("error", "Incorrect state for question submit"));
     }
     String question = payload.get("question");
@@ -60,17 +60,6 @@ public class GameController {
     return ResponseEntity.ok(players);
   }
 
-  @GetMapping("/assign-questions")
-  public ResponseEntity<?> assignQuestions() {
-    try {
-      gameService.assignQuestions();
-      List<PlayerModel> players = gameService.getPlayers();
-      return ResponseEntity.ok(players);
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
-    }
-  }
-
   @GetMapping("/questions")
   public ResponseEntity<?> getQuestions(HttpServletRequest request) {
     String sessionId = getSessionIdFromCookie(request);
@@ -82,9 +71,10 @@ public class GameController {
     return ResponseEntity.ok(responseConversationModels);
   }
 
+  //Expects a JSON of {"questionUUID": String, "answer": String}
   @PostMapping("/submit-answer")
-  public ResponseEntity<?> submitAnswer(HttpServletRequest request, @RequestBody Map<String, Object> payload) {
-    if (!gameService.confirmGameState("submitAnswer")) {
+  public ResponseEntity<?> submitAnswer(HttpServletRequest request, @RequestBody Map<String, String> payload) {
+    if (!gameService.confirmGameState("answering")) {
       return ResponseEntity.status(409).body(Map.of("error", "Incorrect state for answer submit"));
     }
     String sessionId = getSessionIdFromCookie(request);
@@ -94,9 +84,9 @@ public class GameController {
     }
 
     // Convert the question part to ConversationModel
-    ConversationModel question = new ObjectMapper().convertValue(payload.get("question"), ConversationModel.class);
+    String questionId = payload.get("questionId");
     String answer = (String) payload.get("answer");
-    gameService.submitAnswer(sessionId, question, answer);
+    gameService.submitAnswer(sessionId, questionId, answer);
     return ResponseEntity.ok(Map.of("success", "Answers submitted"));
   }
 
