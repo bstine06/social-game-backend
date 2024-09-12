@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.brettstine.social_game_backend.model.PlayerModel;
+import com.brettstine.social_game_backend.model.QuestionAnswerPair;
 import com.brettstine.social_game_backend.model.SessionModel;
 import com.brettstine.social_game_backend.model.ConversationModel;
 
@@ -110,12 +111,13 @@ public class GameService {
     return null;
   }
 
-  public void submitAnswer(String sessionId, String questionUUID, String answer) {
+  public void submitAnswer(String sessionId, String questionId, String answer) {
     PlayerModel player = findPlayerBySessionId(sessionId);
     if (player != null) {
       ConversationModel answerModel = new ConversationModel(sessionId, answer);
       conversationService.addConversationModel(answerModel);
-      player.addAnswerIdforQuestionId(questionUUID, answerModel.getConversationId());
+      String answerId = answerModel.getConversationId();
+      player.addAnswerIdForQuestionId(questionId, answerId);
     }
   }
 

@@ -10,7 +10,7 @@ public class PlayerModel {
     private String name;
     private String submittedQuestionId = null;
     private List<String> questionIdsToAnswer = new ArrayList<>();
-    private Map<String, String> answerIdsForQuestionIds = new HashMap<>();
+    private List<QuestionAnswerPair> answerIdsForQuestionIds = new ArrayList<>();
 
     // Constructor
     public PlayerModel(String sessionId, String name) {
@@ -47,25 +47,26 @@ public class PlayerModel {
         this.questionIdsToAnswer.add(questionId);
     }
 
-    public Map<String, String> getAnswerIdsForQuestionIds() {
+    public List<QuestionAnswerPair> getAnswerIdsForQuestionIds() {
         return answerIdsForQuestionIds;
     }
 
-    public void setAnswerIdsForQuestionIds(Map<String, String> answerIdsForQuestionIds) {
+    public void setAnswerIdsForQuestionIds(List<QuestionAnswerPair> answerIdsForQuestionIds) {
         this.answerIdsForQuestionIds = answerIdsForQuestionIds;
     }
 
     // Additional Methods
-    public void addAnswerIdforQuestionId(String questionId, String answerId) {
-        this.answerIdsForQuestionIds.put(questionId, answerId);
+    public void addAnswerIdForQuestionId(String questionId, String answerId) {
+        this.answerIdsForQuestionIds.add(new QuestionAnswerPair(questionId, answerId));
     }
 
     // Method to find the associated answer for a given question
     public String getAnswerIdForQuestionId(String questionId) {
-        String answerId = answerIdsForQuestionIds.get(questionId);
-        if (answerId == null) {
-            return null; // or throw new NoSuchElementException("No answer found for the given question");
+        for (QuestionAnswerPair pair : answerIdsForQuestionIds) {
+            if (pair.getQuestionId().equals(questionId)) {
+                return pair.getAnswerId();
+            }
         }
-        return answerId;
+        return null; // or throw new NoSuchElementException("No answer found for the given question");
     }
 }
