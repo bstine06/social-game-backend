@@ -50,7 +50,9 @@ public class StateService {
     }
 
     public Map<String, String> updateState(Map<String, String> newState) throws IllegalStateException{
+        System.out.println(newState);
         String newAppState = newState.get("appState");
+        System.out.println(newAppState);
         String newGameState = newState.get("gameState");
         if (!validAppStates.contains(newAppState)) {
             throw new IllegalStateException(newAppState + " is not a valid appState");
