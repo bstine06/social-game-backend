@@ -1,10 +1,13 @@
 package com.brettstine.social_game_backend.service;
 
+import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.SessionModel;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.UUID;
 
@@ -40,5 +43,15 @@ public class SessionService {
 
     public void clearAllSessions() {
         sessions.clear();
+    }
+
+    public Set<SessionModel> getAllNamedSessions() {
+        Set<SessionModel> namedSessions = new HashSet<SessionModel>();
+        getAllSessions().forEach(session -> {
+            if (session.getName() != null) {
+                namedSessions.add(session);
+            }
+        });
+        return namedSessions;
     }
 }

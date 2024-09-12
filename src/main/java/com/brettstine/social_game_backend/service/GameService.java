@@ -27,29 +27,18 @@ public class GameService {
   StateService stateService;
 
   public List<PlayerModel> initialize() {
-    Collection<SessionModel> sessions = sessionService.getAllSessions();
-    sessions.forEach(session -> {
-      if (session.getName() != null) {
-        String sessionId = session.getSessionId();
-
-        // Check if the player list already contains a player with this sessionId
-        boolean playerExists = players.stream()
-            .anyMatch(player -> player.getSessionId().equals(sessionId));
-
-        // Add player if it doesn't already exist
-        if (!playerExists) {
-          PlayerModel player = new PlayerModel(session);
-          players.add(player);
-        }
-      }
-    });
-    if (players.size() >= 3) {
-      stateService.updateGameState("asking");
-      stateService.updateAppState("game");
-      return players;
+    Collection<SessionModel> namedSessions = sessionService.getAllNamedSessions();
+    if (namedSessions.size() < 3) {
+      throw new IllegalStateException("There must be at least 3 names submitted to initialize the game");
     }
-    throw new IllegalStateException("There must be at least 3 players registered.");
-    
+    players.clear();
+    namedSessions.forEach(session -> {
+      PlayerModel player = new PlayerModel(session);
+      players.add(player);
+    });
+    stateService.updateGameState("asking");
+    stateService.updateAppState("game");
+    return players;
   }
 
   public void submitQuestion(String sessionId, String question) {
@@ -101,11 +90,10 @@ public class GameService {
     return player != null ? player.getQuestionsToAnswer() : null;
   }
 
-  public void submitAnswer(String sessionId, String question, String answer) {
+  public void submitAnswer(String sessionId, ConversationModel questionConversationModel, String answer) {
     PlayerModel player = findPlayerBySessionId(sessionId);
     if (player != null) {
       SessionModel session = sessionService.getSession(sessionId);
-      ConversationModel questionConversationModel = new ConversationModel(session, question);
       ConversationModel answerConversationModel = new ConversationModel(session, answer);
       player.addAnswer(questionConversationModel, answerConversationModel);
     }
@@ -120,5 +108,10 @@ public class GameService {
 
   public List<PlayerModel> getPlayers() {
     return players;
+  }
+
+  public boolean confirmGameState(String expectedGameState) {
+    String actualGameState = stateService.getState().get("gameState");
+    return (expectedGameState.equals(actualGameState));
   }
 }
