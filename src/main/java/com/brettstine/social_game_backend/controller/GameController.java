@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 // GameController.java
 import org.springframework.web.bind.annotation.*;
 
+import com.brettstine.social_game_backend.model.ConversationModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.SessionModel;
 import com.brettstine.social_game_backend.service.GameService;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@CrossOrigin(origins = "${frontend.url}", allowCredentials = "true")
 @RequestMapping("/game")
 public class GameController {
 
@@ -28,19 +30,25 @@ public class GameController {
     // Creates all player models based on registered sessions
     @PostMapping("/initialize")
     public ResponseEntity<?> initialize() {
-      List<PlayerModel> players = gameService.initialize();
-      return ResponseEntity.ok(players);
+      List<PlayerModel> players;
+      try {
+        players = gameService.initialize();
+        return ResponseEntity.ok(players);
+      } catch (Exception e) {
+        return ResponseEntity.status(422).body(Map.of("error", e.getMessage()));
+      }
     }
 
-    @PostMapping("/submit-questions")
-    public ResponseEntity<?> submitQuestions(HttpServletRequest request, @RequestBody List<String> questions) {
+    @PostMapping("/submit-question")
+    public ResponseEntity<?> submitQuestions(HttpServletRequest request, @RequestBody Map<String, String> payload) {
+      String question = payload.get("question");
       Cookie[] cookies = request.getCookies();
       if (cookies != null) {
         for (Cookie cookie : cookies) {
           if ("sessionId".equals(cookie.getName())) {
             String sessionId = cookie.getValue();
-            gameService.submitQuestions(sessionId, questions);
-            return ResponseEntity.ok("Questions submitted");
+            gameService.submitQuestion(sessionId, question);
+            return ResponseEntity.ok(Map.of("success", "Question submitted"));
           }
         }
       }
@@ -54,14 +62,35 @@ public class GameController {
     }
 
     @GetMapping("/assign-questions")
-    public List<PlayerModel> assignQuestions() {
+    public ResponseEntity<?> assignQuestions() {
+      try {
         gameService.assignQuestions();
-        return gameService.getPlayers(); // Return the players with updated question assignments
+        List<PlayerModel> players = gameService.getPlayers();
+        return ResponseEntity.ok(players);
+      } catch (Exception e) {
+        return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+      }
     }
 
-    @GetMapping("/questions/{playerId}")
-    public List<String> getQuestions(@PathVariable String playerId) {
-        return gameService.getQuestionsForPlayer(playerId);
+    @GetMapping("/questions")
+    public ResponseEntity<?> getQuestions(HttpServletRequest request) {
+      String sessionId = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("sessionId".equals(cookie.getName())) {
+                    sessionId = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (sessionId == null) {
+          return ResponseEntity.status(400).body(Map.of("error", "No session found"));
+      }
+
+      List<ConversationModel> responseConversationModels = gameService.getQuestionsForPlayer(sessionId);
+        return ResponseEntity.ok(responseConversationModels);
     }
 
     @PostMapping("/submitAnswer")

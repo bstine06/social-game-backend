@@ -5,13 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.brettstine.social_game_backend.model.ConversationModel;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class PlayerModel {
     private SessionModel session;
-    private List<String> submittedQuestions = new ArrayList<>();
-    private List<String> questionsToAnswer = new ArrayList<>();
-    private Map<String, String> answers = new HashMap<>(); // question -> answer
+    private ConversationModel submittedQuestion = new ConversationModel(session);
+    private List<ConversationModel> questionsToAnswer = new ArrayList<>();
+    private Map<ConversationModel, ConversationModel> answers = new HashMap<>(); // question -> answer
 
     // Constructor
     public PlayerModel(SessionModel session) {
@@ -33,47 +35,36 @@ public class PlayerModel {
       return session.getName();
     }
 
-    public List<String> getSubmittedQuestions() {
-        return submittedQuestions;
+    public ConversationModel getSubmittedQuestion() {
+        return submittedQuestion;
     }
 
-    @JsonIgnore
-    public String getOneSubmittedQuestion() {
-      if (submittedQuestions.size() < 1) {
-        throw new IllegalArgumentException("No questions to get.");
-      }
-      String question = submittedQuestions.get(0);
-      submittedQuestions.remove(0);
-      return question;
+    public void setSubmittedQuestion(ConversationModel submittedQuestion) {
+        this.submittedQuestion = submittedQuestion;
     }
 
-    public void setSubmittedQuestions(List<String> submittedQuestions) {
-        this.submittedQuestions.clear();
-        this.submittedQuestions = new ArrayList<String>(submittedQuestions);
-    }
-
-    public List<String> getQuestionsToAnswer() {
+    public List<ConversationModel> getQuestionsToAnswer() {
         return questionsToAnswer;
     }
 
-    public void setQuestionsToAnswer(List<String> questionsToAnswer) {
-        this.questionsToAnswer = questionsToAnswer;
+    public void addQuestionToAnswer(ConversationModel questionToAnswer) {
+        this.questionsToAnswer.add(questionToAnswer);
     }
 
-    public Map<String, String> getAnswers() {
+    public Map<ConversationModel, ConversationModel> getAnswers() {
         return answers;
     }
 
-    public void setAnswers(Map<String, String> answers) {
+    public void setAnswers(Map<ConversationModel, ConversationModel> answers) {
         this.answers = answers;
     }
 
     // Additional Methods
-    public void addAnswer(String question, String answer) {
+    public void addAnswer(ConversationModel question, ConversationModel answer) {
         this.answers.put(question, answer);
     }
 
-    public String getAnswer(String question) {
+    public ConversationModel getAnswer(ConversationModel question) {
         return this.answers.get(question);
     }
 }
