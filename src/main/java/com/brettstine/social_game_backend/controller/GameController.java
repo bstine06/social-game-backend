@@ -31,10 +31,9 @@ public class GameController {
   // Creates all player models based on registered sessions
   @PostMapping("/initialize")
   public ResponseEntity<?> initialize() {
-    List<PlayerModel> players;
     try {
-      players = gameService.initialize();
-      return ResponseEntity.ok(players);
+      gameService.initialize();
+      return ResponseEntity.ok(Map.of("success", "Game Initialized"));
     } catch (Exception e) {
       return ResponseEntity.status(422).body(Map.of("error", e.getMessage()));
     }
