@@ -87,7 +87,7 @@ public class GameController {
     String questionId = payload.get("questionId");
     String answer = (String) payload.get("answer");
     gameService.submitAnswer(sessionId, questionId, answer);
-    return ResponseEntity.ok(Map.of("success", "Answers submitted"));
+    return ResponseEntity.ok(Map.of("success", "Answer submitted"));
   }
 
   private String getSessionIdFromCookie(HttpServletRequest request) {

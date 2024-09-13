@@ -104,7 +104,7 @@ public class GameService {
     if (player != null) {
       List<ConversationModel> questions = new ArrayList<>();
       player.getQuestionIdsToAnswer().forEach((questionId) -> {
-        questions.add(conversationService.getConversationModelFromUUID(questionId));
+        questions.add(conversationService.getConversationModelFromId(questionId));
       });
       return questions;
     }
@@ -117,6 +117,7 @@ public class GameService {
       ConversationModel answerModel = new ConversationModel(sessionId, answer);
       conversationService.addConversationModel(answerModel);
       String answerId = answerModel.getConversationId();
+      conversationService.addAnswerToQuestion(questionId, answerId);
       player.addAnswerIdForQuestionId(questionId, answerId);
     }
   }
