@@ -8,13 +8,11 @@ public class PlayerModel {
     private String playerId;
     private String gameId;
     private String name;
-    private String submittedQuestionId;
 
     public PlayerModel(String gameId, String name) {
         this.playerId = UUID.randomUUID().toString();
         this.gameId = gameId;
         this.name = name;
-        this.submittedQuestionId = null;
     }
 
     // Getters and Setters
@@ -32,13 +30,5 @@ public class PlayerModel {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getSubmittedQuestionId() {
-        return submittedQuestionId;
-    }
-
-    public void setSubmittedQuestionId(String questionId) {
-        this.submittedQuestionId = questionId;
     }
 }

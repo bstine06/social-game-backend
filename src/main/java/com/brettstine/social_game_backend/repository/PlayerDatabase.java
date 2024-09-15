@@ -62,22 +62,4 @@ public class PlayerDatabase {
     playerStore.put(playerId, player);
     return player;
   }
-
-  public String getSubmittedQuestionId(String playerId) {
-    if (!playerStore.containsKey(playerId)) {
-      throw new IllegalArgumentException("Player not found for ID: " + playerId);
-    }
-    PlayerModel player = playerStore.get(playerId);
-    return player.getSubmittedQuestionId();
-  }
-
-  public PlayerModel setSubmittedQuestionId(String playerId, String questionId) {
-    if (!playerStore.containsKey(playerId)) {
-      throw new IllegalArgumentException("Player not found for ID: " + playerId);
-    }
-    PlayerModel player = playerStore.get(playerId);
-    player.setSubmittedQuestionId(questionId);
-    playerStore.put(playerId, player);
-    return player;
-  }
 }
