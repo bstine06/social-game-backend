@@ -6,12 +6,17 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.brettstine.social_game_backend.model.ConversationModel;
+import com.brettstine.social_game_backend.model.AnswerModel;
+import com.brettstine.social_game_backend.model.QuestionModel;
 import com.brettstine.social_game_backend.service.ConversationService;
+import com.brettstine.social_game_backend.utils.CookieUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @CrossOrigin(origins = "${frontend.url}", allowCredentials = "true")
@@ -23,19 +28,110 @@ public class ConversationController {
   public ConversationController(ConversationService conversationService) {
     this.conversationService = conversationService;
   }
-  
-  @GetMapping("/get")
-  public ResponseEntity<?> getConversationModelFromId(@RequestBody Map<String, String> payload) {
-    String conversationId = payload.get("conversationId");
-    ConversationModel conversationModel = conversationService.getConversationModelFromId(conversationId);
-    return ResponseEntity.ok(conversationModel);
+
+  @GetMapping("/get-question")
+  public ResponseEntity<?> getQuestionFromId(@RequestBody Map<String, String> payload) {
+    String questionId = payload.get("questionId");
+    if (questionId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "no questionId provided"));
+    }
+    QuestionModel questionModel = conversationService.getQuestionById(questionId);
+    return ResponseEntity.ok(questionModel);
+  }
+
+  @GetMapping("/get-answer")
+  public ResponseEntity<?> getAnswerFromId(@RequestBody Map<String, String> payload) {
+    String answerId = payload.get("answerId");
+    if (answerId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "no answerId provided"));
+    }
+    AnswerModel answerModel = conversationService.getAnswerById(answerId);
+    return ResponseEntity.ok(answerModel);
   }
 
   @GetMapping("/get-answers-for-question")
-  public ResponseEntity<?> getConversationModel(@RequestBody Map<String, String> payload) {
+  public ResponseEntity<?> getAnswersForQuestion(@RequestBody Map<String, String> payload) {
     String questionId = payload.get("questionId");
-    List<ConversationModel> answerModels = conversationService.getAnswersForQuestion(questionId);
-    return ResponseEntity.ok(answerModels);
+    if (questionId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "no questionId provided"));
+    }
+
+    try {
+      List<AnswerModel> answers = conversationService.getAnswersForQuestion(questionId);
+      return ResponseEntity.ok(answers);
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(Map.of("error", "error fetching answers for question", "message", e.getMessage()));
+    }
+  }
+
+  @PostMapping("/submit-question")
+  public ResponseEntity<?> submitQuestion(HttpServletRequest request, @RequestBody Map<String, String> payload) {
+
+    String gameId = payload.get("gameId");
+    if (gameId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "no gameId provided"));
+    }
+    String question = payload.get("question");
+    if (question == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "no question provided"));
+    }
+    String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+    if (playerId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "No playerId found"));
+    }
+
+    try {
+      conversationService.submitQuestion(gameId, playerId, question);
+      return ResponseEntity.ok(Map.of("success", "Question submitted"));
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(Map.of("error", "error submitting question", "message", e.getMessage()));
+    }
+  }
+
+  @GetMapping("/get-questions")
+  public ResponseEntity<?> getQuestions(HttpServletRequest request) {
+
+    String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+    if (playerId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "No playerId found"));
+    }
+
+    try {
+      List<QuestionModel> questions = conversationService.getQuestionsForPlayer(playerId);
+      return ResponseEntity.ok(questions);
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(Map.of("error", "error fetching questions", "message", e.getMessage()));
+    }
+    
+  }
+
+  @PostMapping("/submit-answer")
+  public ResponseEntity<?> submitAnswer(HttpServletRequest request, @RequestBody Map<String, String> payload) {
+
+    // gameId needs to be checked to ensure that the game state is correct for submitting answers
+    String gameId = payload.get("gameId");
+    if (gameId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "no gameId provided"));
+    }
+    String questionId = payload.get("questionId");
+    if (questionId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "no questionId provided"));
+    }
+    String answer = payload.get("answer");
+    if (answer == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "no answer provided"));
+    }
+    String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+    if (playerId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "No playerId found"));
+    }
+
+    try {
+      conversationService.submitAnswer(gameId, playerId, questionId, answer);
+      return ResponseEntity.ok(Map.of("success", "Answer submitted"));
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(Map.of("error", "error submitting answer", "message", e.getMessage()));
+    }
   }
 
 }
