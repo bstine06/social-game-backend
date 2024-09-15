@@ -88,8 +88,8 @@ public class ConversationController {
     }
   }
 
-  @GetMapping("/get-questions")
-  public ResponseEntity<?> getQuestions(HttpServletRequest request) {
+  @GetMapping("/get-questions-for-player")
+  public ResponseEntity<?> getQuestionsForPlayer(HttpServletRequest request) {
 
     String playerId = CookieUtil.getDataFromCookie(request, "playerId");
     if (playerId == null) {
@@ -102,7 +102,6 @@ public class ConversationController {
     } catch (Exception e) {
       return ResponseEntity.status(500).body(Map.of("error", "error fetching questions", "message", e.getMessage()));
     }
-    
   }
 
   @PostMapping("/submit-answer")

@@ -2,6 +2,7 @@ package com.brettstine.social_game_backend.repository;
 
 import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,7 +21,7 @@ public class PlayerDatabase {
 
   public void addPlayer(PlayerModel player) {
     String playerId = player.getPlayerId();
-    if (!playerStore.containsKey(playerId)) {
+    if (playerStore.containsKey(playerId)) {
       throw new IllegalArgumentException("Player already exists with ID: " + playerId);
     }
     playerStore.put(playerId, player);
@@ -45,6 +46,11 @@ public class PlayerDatabase {
                       .stream()
                       .filter(player -> gameId.equals(player.getGameId()))
                       .collect(Collectors.toList());
+  }
+
+  public List<PlayerModel> getAllPlayers() {
+    List<PlayerModel> allPlayers = new ArrayList<>(playerStore.values());
+    return allPlayers;
   }
 
   public PlayerModel setNameOfPlayer(String playerId, String name) {
@@ -74,24 +80,4 @@ public class PlayerDatabase {
     playerStore.put(playerId, player);
     return player;
   }
-
-  public List<String> getQuestionIdsToAnswer(String playerId) {
-    if (!playerStore.containsKey(playerId)) {
-      throw new IllegalArgumentException("Player not found for ID: " + playerId);
-    }
-    PlayerModel player = playerStore.get(playerId);
-    return player.getQuestionIdsToAnswer();
-  }
-
-  public PlayerModel setQuestionIdsToAnswer(String playerId, List<String> questionIds) {
-    if (!playerStore.containsKey(playerId)) {
-      throw new IllegalArgumentException("Player not found for ID: " + playerId);
-    }
-    PlayerModel player = playerStore.get(playerId);
-    player.getQuestionIdsToAnswer();
-    questionIds.forEach(questionId -> player.addQuestionIdToAnswer(questionId));
-    playerStore.put(playerId, player);
-    return player;
-  }
-  
 }

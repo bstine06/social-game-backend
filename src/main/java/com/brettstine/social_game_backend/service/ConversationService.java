@@ -10,6 +10,7 @@ import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
 import com.brettstine.social_game_backend.repository.AnswerDatabase;
+import com.brettstine.social_game_backend.repository.PlayerQuestionDatabase;
 import com.brettstine.social_game_backend.repository.QuestionAnswerDatabase;
 import com.brettstine.social_game_backend.repository.QuestionDatabase;
 
@@ -19,17 +20,20 @@ public class ConversationService {
     private final QuestionDatabase questionDatabase;
     private final AnswerDatabase answerDatabase;
     private final QuestionAnswerDatabase questionAnswerDatabase;
+    private final PlayerQuestionDatabase playerQuestionDatabase;
     private final GameService gameService;
     private final PlayerService playerService;
 
     public ConversationService(AnswerDatabase answerDatabase,
             QuestionDatabase questionDatabase,
             QuestionAnswerDatabase questionAnswerDatabase,
+            PlayerQuestionDatabase playerQuestionDatabase,
             GameService gameService,
             PlayerService playerService) {
         this.questionDatabase = questionDatabase;
         this.answerDatabase = answerDatabase;
         this.questionAnswerDatabase = questionAnswerDatabase;
+        this.playerQuestionDatabase = playerQuestionDatabase;
         this.gameService = gameService;
         this.playerService = playerService;
     }
@@ -59,8 +63,17 @@ public class ConversationService {
         return answerDatabase.getAnswerById(answerId);
     }
 
+    public void addQuestionsToAnswerForPlayer(String playerId, String questionId) {
+        try {
+            playerService.getPlayer(playerId);
+            playerQuestionDatabase.addPlayerQuestion(playerId, questionId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        } 
+    }
+
     public List<QuestionModel> getQuestionsForPlayer(String playerId) {
-        List<String> questionIds = playerService.getQuestionIdsToAnswer(playerId);
+        List<String> questionIds = playerQuestionDatabase.getQuestionsForPlayer(playerId);
         List<QuestionModel> questions = questionIds.stream()
                 .map(questionId -> getQuestionById(questionId))
                 .collect(Collectors.toList());

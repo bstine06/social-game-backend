@@ -2,7 +2,6 @@ package com.brettstine.social_game_backend.service;
 
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.repository.PlayerDatabase;
-import com.brettstine.social_game_backend.repository.PlayerQuestionDatabase;
 
 import org.springframework.stereotype.Service;
 
@@ -12,19 +11,22 @@ import java.util.List;
 public class PlayerService {
 
     private final PlayerDatabase playerDatabase;
-    private final PlayerQuestionDatabase playerQuestionDatabase;
     private final GameService gameService;
 
-    public PlayerService(PlayerDatabase playerDatabase, PlayerQuestionDatabase playerQuestionDatabase, GameService gameService) {
+    public PlayerService(PlayerDatabase playerDatabase, GameService gameService) {
         this.playerDatabase = playerDatabase;
-        this.playerQuestionDatabase = playerQuestionDatabase;
         this.gameService = gameService;
     }
 
     public PlayerModel createPlayer(String gameId, String name) {
-        PlayerModel player = new PlayerModel(gameId, name);
-        playerDatabase.addPlayer(player);
-        return player;
+        try {
+            gameService.getGame(gameId);
+            PlayerModel player = new PlayerModel(gameId, name);
+            playerDatabase.addPlayer(player);
+            return player;
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     public PlayerModel getPlayer(String playerId) {
@@ -40,17 +42,16 @@ public class PlayerService {
         return player;
     }
 
-    public List<String> getQuestionIdsToAnswer(String playerId) {
-        List<String> questionIds = playerQuestionDatabase.getQuestionsForPlayer(playerId);
-        return questionIds;
-    }
-
     public List<PlayerModel> getAllPlayersByGameId(String gameId) {
         try {
             gameService.getGame(gameId);
             return playerDatabase.getAllPlayersByGameId(gameId);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Game not found for ID: " + gameId);
-        }       
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+    }
+
+    public List<PlayerModel> getAllPlayers() {
+        return playerDatabase.getAllPlayers();
     }
 }

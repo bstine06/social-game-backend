@@ -35,8 +35,8 @@ public class PlayerController {
         this.playerService = playerService;
     }
 
-    @PostMapping("/set-player")
-    public ResponseEntity<?> setPlayer(HttpServletResponse response, @RequestBody Map<String, String> payload) {
+    @PostMapping("/create-player")
+    public ResponseEntity<?> createPlayer(HttpServletResponse response, @RequestBody Map<String, String> payload) {
         String name = payload.get("name");
         if (name == null) {
             return ResponseEntity.status(400).body(Map.of("error", "no name provided"));
@@ -60,7 +60,7 @@ public class PlayerController {
             // Create a JSON response with player information
             return ResponseEntity.ok(player);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "could not set player", "message", e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", "could not create player", "message", e.getMessage()));
         }
         
     }
@@ -99,8 +99,8 @@ public class PlayerController {
         }
     }
 
-    @GetMapping("/get-all-players")
-    public ResponseEntity<?> getAllPlayers(@RequestBody Map<String, String> payload) {
+    @GetMapping("/get-all-players-in-game")
+    public ResponseEntity<?> getAllPlayersInGame(@RequestBody Map<String, String> payload) {
         String gameId = payload.get("gameId");
         if (gameId == null) {
             return ResponseEntity.status(400).body(Map.of("error", "no gameId provided"));
@@ -112,6 +112,15 @@ public class PlayerController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "could not get players", "message", e.getMessage()));
         }
-        
+    }
+
+    @GetMapping("/get-all-players")
+    public ResponseEntity<?> getAllPlayers() {
+        try {
+            List<PlayerModel> allPlayers = playerService.getAllPlayers();
+            return ResponseEntity.ok(allPlayers);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "could not get players", "message", e.getMessage()));
+        }
     }
 }
