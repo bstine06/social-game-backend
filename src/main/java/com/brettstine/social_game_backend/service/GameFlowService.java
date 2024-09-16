@@ -78,28 +78,29 @@ public class GameFlowService {
         }
     }
 
-    // Assign questions to players in a circular manner
     public void assignQuestionsToPlayers(String gameId) {
         List<PlayerModel> players = playerService.getAllPlayersByGameId(gameId); // Fetch all players by gameId
         int numPlayers = players.size();
-
-        if (numPlayers < 2) {
-            throw new IllegalStateException("Not enough players to assign questions.");
+    
+        if (numPlayers < 3) {
+            throw new IllegalStateException("Not enough players to assign questions uniquely.");
         }
-
+    
+        // Loop through each player and assign them a unique set of 2 questions
         for (int i = 0; i < numPlayers; i++) {
             PlayerModel currentPlayer = players.get(i);
-            PlayerModel nextPlayer = players.get((i + 1) % numPlayers);
-            PlayerModel prevPlayer = players.get((i + numPlayers - 1) % numPlayers);
-
-            String nextPlayerId = nextPlayer.getPlayerId();
-            String prevPlayerId = prevPlayer.getPlayerId();
-            QuestionModel currentPlayerQuestion = conversationService.getQuestionByPlayerId(currentPlayer.getPlayerId());
-            String currentPlayerQuestionId = currentPlayerQuestion.getQuestionId();
-
-            conversationService.addQuestionForPlayer(nextPlayerId, currentPlayerQuestionId);
-            conversationService.addQuestionForPlayer(prevPlayerId, currentPlayerQuestionId);
+    
+            // Assign the next 2 players' questions to the current player
+            PlayerModel nextPlayer1 = players.get((i + 1) % numPlayers); // Next player in the list
+            PlayerModel nextPlayer2 = players.get((i + 2) % numPlayers); // Player after the next
+            QuestionModel nextPlayer1Question = conversationService.getQuestionByPlayerId(nextPlayer1.getPlayerId());
+            QuestionModel nextPlayer2Question = conversationService.getQuestionByPlayerId(nextPlayer2.getPlayerId());
+    
+            // Add both questions to the current player
+            conversationService.addQuestionForPlayer(currentPlayer.getPlayerId(), nextPlayer1Question.getQuestionId());
+            conversationService.addQuestionForPlayer(currentPlayer.getPlayerId(), nextPlayer2Question.getQuestionId());
         }
     }
+    
 }
 
