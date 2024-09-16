@@ -33,6 +33,11 @@ public class GameDatabase {
         return gameStore.get(gameId);
     }
 
+    public boolean hasGameByGameId(String gameId) {
+        return gameStore.values().stream()
+            .anyMatch(question -> question.getGameId().equals(gameId));
+    }   
+
     public GameModel updateGame(String gameId, GameModel game) {
         if (!gameStore.containsKey(gameId)) {
             throw new IllegalArgumentException("Game not found for ID: " + gameId);

@@ -1,19 +1,21 @@
 package com.brettstine.social_game_backend.model;
 
-import java.util.UUID;
-
 public class GameModel {
 
     private String gameId;
     private GameState gameState;
 
-    public GameModel() {
-        this.gameId = UUID.randomUUID().toString();
+    public GameModel(String gameId) {
         this.gameState = GameState.LOBBY;
+        this.gameId = gameId;
     }
 
     public String getGameId() {
         return gameId;
+    }
+
+    public void setGameId(String gameId) {
+        this.gameId = gameId;
     }
 
     public GameState getGameState() {
