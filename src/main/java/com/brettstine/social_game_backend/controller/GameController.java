@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.brettstine.social_game_backend.model.GameModel;
+import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.GameService;
 
 import jakarta.ws.rs.core.Response;
@@ -30,9 +31,11 @@ public class GameController {
   private static final Logger logger = LoggerFactory.getLogger(GameController.class);
 
   private final GameService gameService;
+  private final GameFlowService gameFlowService;
 
-  public GameController(GameService gameService) {
+  public GameController(GameService gameService, GameFlowService gameFlowService) {
     this.gameService = gameService;
+    this.gameFlowService = gameFlowService;
   }
 
   @PostMapping("/create-game")
@@ -74,6 +77,23 @@ public class GameController {
         }
     }
 
+    @PostMapping("/advance-state")
+    public ResponseEntity<?> advanceState(@RequestBody Map<String,String> payload) {
+      String gameId = payload.get("gameId");
+      if (gameId == null) {
+        return ResponseEntity.status(400).body(Map.of("error", "No gameId provided"));
+      }
+      try {
+          gameFlowService.tryAdvanceGameState(gameId);
+          GameModel game = gameService.getGame(gameId);
+          return ResponseEntity.ok(game);
+      } catch (Exception e) {
+          logger.error("Error while executing advanceState", e);
+          return ResponseEntity.status(400).body(Map.of("error", "Could not advance gameState", "message", e.getMessage()));
+      }
+    }
+    
+
     @PostMapping("/set-state")
     public ResponseEntity<?> setState(@RequestBody Map<String, String> payload) {
         String gameId = payload.get("gameId");
@@ -87,6 +107,7 @@ public class GameController {
         logger.info("Game: {} : Received request to update gameState to: {}", gameId, gameState);
         
         try {
+            gameFlowService.checkMinimumPlayersForQuestionState(gameId);
             GameModel updatedGame = gameService.setGameState(gameId, GameState.fromString(gameState));
             logger.info("Game: {} : Successfully updated gameState to {}", gameId, gameState);
             return ResponseEntity.ok(updatedGame);

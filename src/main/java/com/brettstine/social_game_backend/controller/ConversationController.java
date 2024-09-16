@@ -120,6 +120,7 @@ public class ConversationController {
       gameFlowService.validateGame(gameId);
       gameFlowService.validatePlayer(playerId);
       QuestionModel question = conversationService.submitQuestion(gameId, playerId, questionContent);
+      gameFlowService.tryAdvanceGameState(gameId);
       return ResponseEntity.ok(question);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(400).body(Map.of("error", "error submitting question", "message", e.getMessage()));

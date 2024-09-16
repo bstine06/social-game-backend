@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.brettstine.social_game_backend.model.AnswerModel;
-import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
 import com.brettstine.social_game_backend.repository.AnswerDatabase;
@@ -68,6 +67,10 @@ public class ConversationService {
         return answerDatabase.getAnswerById(answerId);
     }
 
+    public QuestionModel getQuestionByPlayerId(String playerId) {
+        return questionDatabase.getQuestionByPlayerId(playerId);
+    }
+
     public List<QuestionModel> getQuestionsForPlayer(String playerId) {
         List<String> questionIds = playerQuestionDatabase.getQuestionsForPlayer(playerId);
         List<QuestionModel> questions = questionIds.stream()
@@ -76,36 +79,16 @@ public class ConversationService {
         return questions;
     }
 
+    public void addQuestionForPlayer(String playerId, String questionId) {
+        playerQuestionDatabase.addPlayerQuestion(playerId, questionId);
+    }
+
     public List<AnswerModel> getAnswersForQuestion(String questionId) {
         List<String> answerIds = questionAnswerDatabase.getAnswersForQuestion(questionId);
         List<AnswerModel> answers = answerIds.stream()
                 .map(answerId -> getAnswerById(answerId))
                 .collect(Collectors.toList());
         return answers;
-    }
-
-    // Assign questions to players in a circular manner
-    public void assignQuestionsToPlayers(String gameId) {
-        List<PlayerModel> players = playerService.getAllPlayersByGameId(gameId); // Fetch all players by gameId
-        int numPlayers = players.size();
-
-        if (numPlayers < 2) {
-            throw new IllegalStateException("Not enough players to assign questions.");
-        }
-
-        for (int i = 0; i < numPlayers; i++) {
-            PlayerModel currentPlayer = players.get(i);
-            PlayerModel nextPlayer = players.get((i + 1) % numPlayers);
-            PlayerModel prevPlayer = players.get((i + numPlayers - 1) % numPlayers);
-
-            String nextPlayerId = nextPlayer.getPlayerId();
-            String prevPlayerId = prevPlayer.getPlayerId();
-            QuestionModel currentPlayerQuestion = questionDatabase.getQuestionByPlayerId(currentPlayer.getPlayerId());
-            String currentPlayerQuestionId = currentPlayerQuestion.getQuestionId();
-
-            playerQuestionDatabase.addPlayerQuestion(nextPlayerId, currentPlayerQuestionId);
-            playerQuestionDatabase.addPlayerQuestion(prevPlayerId, currentPlayerQuestionId);
-        }
     }
 
     public List<QuestionModel> getAllQuestions() {

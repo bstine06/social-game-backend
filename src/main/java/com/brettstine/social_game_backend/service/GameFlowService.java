@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.PlayerModel;
+import com.brettstine.social_game_backend.model.QuestionModel;
 
 @Service
 public class GameFlowService {
@@ -61,8 +62,34 @@ public class GameFlowService {
             boolean allPlayersSubmittedQuestions = players.stream()
                 .allMatch(player -> conversationService.hasSubmittedQuestion(player.getPlayerId()));
             if (allPlayersSubmittedQuestions) {
+                gameService.setGameState(gameId, GameState.ASSIGN);
+                assignQuestionsToPlayers(gameId);
                 gameService.setGameState(gameId, GameState.ANSWER);
             }
+        }
+    }
+
+    // Assign questions to players in a circular manner
+    public void assignQuestionsToPlayers(String gameId) {
+        List<PlayerModel> players = playerService.getAllPlayersByGameId(gameId); // Fetch all players by gameId
+        int numPlayers = players.size();
+
+        if (numPlayers < 2) {
+            throw new IllegalStateException("Not enough players to assign questions.");
+        }
+
+        for (int i = 0; i < numPlayers; i++) {
+            PlayerModel currentPlayer = players.get(i);
+            PlayerModel nextPlayer = players.get((i + 1) % numPlayers);
+            PlayerModel prevPlayer = players.get((i + numPlayers - 1) % numPlayers);
+
+            String nextPlayerId = nextPlayer.getPlayerId();
+            String prevPlayerId = prevPlayer.getPlayerId();
+            QuestionModel currentPlayerQuestion = conversationService.getQuestionByPlayerId(currentPlayer.getPlayerId());
+            String currentPlayerQuestionId = currentPlayerQuestion.getQuestionId();
+
+            conversationService.addQuestionForPlayer(nextPlayerId, currentPlayerQuestionId);
+            conversationService.addQuestionForPlayer(prevPlayerId, currentPlayerQuestionId);
         }
     }
 }
