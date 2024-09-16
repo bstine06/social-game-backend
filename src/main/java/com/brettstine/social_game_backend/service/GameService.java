@@ -10,6 +10,7 @@ import com.brettstine.social_game_backend.model.GameState;
 
 @Service
 public class GameService {
+    
     private final GameDatabase gameDatabase;
 
     public GameService(GameDatabase gameDatabase) {

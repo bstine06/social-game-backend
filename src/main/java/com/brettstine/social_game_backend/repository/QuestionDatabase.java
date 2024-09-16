@@ -45,6 +45,11 @@ public class QuestionDatabase {
         throw new IllegalArgumentException("Question not found with playerId: " + playerId);
     }
 
+    public boolean hasQuestionByPlayerId(String playerId) {
+        return questionStore.values().stream()
+            .anyMatch(question -> question.getPlayerId().equals(playerId));
+    }    
+
     public List<QuestionModel> getAllQuestions() {
         List<QuestionModel> questions = new ArrayList<>(questionStore.values());
         return questions;

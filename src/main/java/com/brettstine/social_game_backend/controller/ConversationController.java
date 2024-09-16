@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.brettstine.social_game_backend.model.AnswerModel;
+import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.QuestionModel;
 import com.brettstine.social_game_backend.service.ConversationService;
+import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,9 +29,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class ConversationController {
 
   private final ConversationService conversationService;
+  private final GameFlowService gameFlowService;
 
-  public ConversationController(ConversationService conversationService) {
+  public ConversationController(ConversationService conversationService, GameFlowService gameFlowService) {
     this.conversationService = conversationService;
+    this.gameFlowService = gameFlowService;
   }
 
   @GetMapping("/get-question")
@@ -52,7 +56,7 @@ public class ConversationController {
     return ResponseEntity.ok(answerModel);
   }
 
-  @DeleteMapping("delete-question")
+  @DeleteMapping("/delete-question")
   public ResponseEntity<?> deleteQuestion(@RequestBody Map<String, String> payload) {
     String questionId = payload.get("questionId");
     if (questionId == null) {
@@ -66,7 +70,7 @@ public class ConversationController {
     }
   }
 
-  @DeleteMapping("delete-answer")
+  @DeleteMapping("/delete-answer")
   public ResponseEntity<?> deleteAnswer(@RequestBody Map<String, String> payload) {
     String answerId = payload.get("answerId");
     if (answerId == null) {
@@ -112,8 +116,13 @@ public class ConversationController {
     }
 
     try {
+      gameFlowService.ensureGameState(gameId, GameState.QUESTION);
+      gameFlowService.validateGame(gameId);
+      gameFlowService.validatePlayer(playerId);
       QuestionModel question = conversationService.submitQuestion(gameId, playerId, questionContent);
       return ResponseEntity.ok(question);
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(400).body(Map.of("error", "error submitting question", "message", e.getMessage()));
     } catch (Exception e) {
       return ResponseEntity.status(500).body(Map.of("error", "error submitting question", "message", e.getMessage()));
     }
@@ -128,6 +137,7 @@ public class ConversationController {
     }
 
     try {
+      gameFlowService.validatePlayer(playerId);
       List<QuestionModel> questions = conversationService.getQuestionsForPlayer(playerId);
       return ResponseEntity.ok(questions);
     } catch (Exception e) {
@@ -157,6 +167,10 @@ public class ConversationController {
     }
 
     try {
+      gameFlowService.ensureGameState(gameId, GameState.QUESTION);
+      gameFlowService.validateGame(gameId);
+      gameFlowService.validatePlayer(playerId);
+      gameFlowService.validateQuestion(questionId);
       AnswerModel answer = conversationService.submitAnswer(gameId, playerId, questionId, answerContent);
       return ResponseEntity.ok(answer);
     } catch (Exception e) {

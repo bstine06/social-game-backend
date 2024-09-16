@@ -21,48 +21,31 @@ public class ConversationService {
     private final AnswerDatabase answerDatabase;
     private final QuestionAnswerDatabase questionAnswerDatabase;
     private final PlayerQuestionDatabase playerQuestionDatabase;
-    
-    private final GameService gameService;
     private final PlayerService playerService;
 
     public ConversationService(AnswerDatabase answerDatabase,
             QuestionDatabase questionDatabase,
             QuestionAnswerDatabase questionAnswerDatabase,
             PlayerQuestionDatabase playerQuestionDatabase,
-            GameService gameService,
             PlayerService playerService) {
         this.questionDatabase = questionDatabase;
         this.answerDatabase = answerDatabase;
         this.questionAnswerDatabase = questionAnswerDatabase;
         this.playerQuestionDatabase = playerQuestionDatabase;
-        this.gameService = gameService;
         this.playerService = playerService;
     }
 
     public QuestionModel submitQuestion(String gameId, String playerId, String content) {
-        if (!gameService.confirmGameState(gameId, GameState.QUESTION)) {
-            throw new IllegalStateException("gameState must be 'QUESTION' to submit a question");
-        }
-        try { // Check that the player exists!
-            playerService.getPlayer(playerId);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
         QuestionModel question = new QuestionModel(gameId, playerId, content);
         questionDatabase.addQuestion(question);
         return question;
     }
 
+    public boolean hasSubmittedQuestion(String playerId) {
+        return questionDatabase.hasQuestionByPlayerId(playerId);
+    }
+
     public AnswerModel submitAnswer(String gameId, String playerId, String questionId, String content) {
-        if (!gameService.confirmGameState(gameId, GameState.ANSWER)) {
-            throw new IllegalStateException("gameState must be 'ANSWER' to submit an answer");
-        }
-        try { // Check that the player and question exist!
-            playerService.getPlayer(playerId);
-            getQuestionById(questionId);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
         AnswerModel answer = new AnswerModel(gameId, playerId, questionId, content);
         answerDatabase.addAnswer(answer);
         questionAnswerDatabase.addQuestionAnswer(questionId, answer.getAnswerId());
@@ -83,15 +66,6 @@ public class ConversationService {
 
     public AnswerModel getAnswerById(String answerId) {
         return answerDatabase.getAnswerById(answerId);
-    }
-
-    public void addQuestionsToAnswerForPlayer(String playerId, String questionId) {
-        try {
-            playerService.getPlayer(playerId);
-            playerQuestionDatabase.addPlayerQuestion(playerId, questionId);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        } 
     }
 
     public List<QuestionModel> getQuestionsForPlayer(String playerId) {
