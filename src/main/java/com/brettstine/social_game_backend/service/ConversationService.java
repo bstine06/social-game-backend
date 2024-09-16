@@ -42,6 +42,11 @@ public class ConversationService {
         if (!gameService.confirmGameState(gameId, GameState.QUESTION)) {
             throw new IllegalStateException("gameState must be 'QUESTION' to submit a question");
         }
+        try { // Check that the player exists!
+            playerService.getPlayer(playerId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
         QuestionModel question = new QuestionModel(gameId, playerId, content);
         questionDatabase.addQuestion(question);
         return question;
@@ -50,6 +55,12 @@ public class ConversationService {
     public AnswerModel submitAnswer(String gameId, String playerId, String questionId, String content) {
         if (!gameService.confirmGameState(gameId, GameState.ANSWER)) {
             throw new IllegalStateException("gameState must be 'ANSWER' to submit an answer");
+        }
+        try { // Check that the player and question exist!
+            playerService.getPlayer(playerId);
+            getQuestionById(questionId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage());
         }
         AnswerModel answer = new AnswerModel(gameId, playerId, questionId, content);
         answerDatabase.addAnswer(answer);
@@ -124,6 +135,10 @@ public class ConversationService {
 
     public List<QuestionModel> getAllQuestions() {
         return questionDatabase.getAllQuestions();
+    }
+
+    public List<AnswerModel> getAllAnswers() {
+        return answerDatabase.getAllAnswers();
     }
 
 }

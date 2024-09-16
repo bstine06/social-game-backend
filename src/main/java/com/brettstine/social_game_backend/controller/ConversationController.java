@@ -52,6 +52,34 @@ public class ConversationController {
     return ResponseEntity.ok(answerModel);
   }
 
+  @DeleteMapping("delete-question")
+  public ResponseEntity<?> deleteQuestion(@RequestBody Map<String, String> payload) {
+    String questionId = payload.get("questionId");
+    if (questionId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "no questionId provided"));
+    }
+    try {
+      conversationService.deleteQuestion(questionId);
+      return ResponseEntity.ok(Map.of("successfully deleted question", questionId));
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(Map.of("error", "could not delete question", "message", e.getMessage()));
+    }
+  }
+
+  @DeleteMapping("delete-answer")
+  public ResponseEntity<?> deleteAnswer(@RequestBody Map<String, String> payload) {
+    String answerId = payload.get("answerId");
+    if (answerId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "no answerId provided"));
+    }
+    try {
+      conversationService.deleteAnswer(answerId);
+      return ResponseEntity.ok(Map.of("successfully deleted answer", answerId));
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(Map.of("error", "could not delete answer", "message", e.getMessage()));
+    }
+  }
+
   @GetMapping("/get-answers-for-question")
   public ResponseEntity<?> getAnswersForQuestion(@RequestBody Map<String, String> payload) {
     String questionId = payload.get("questionId");
@@ -137,7 +165,7 @@ public class ConversationController {
   }
 
   @GetMapping("/get-all-questions")
-  public ResponseEntity<?> getAllQuestions() {
+  public ResponseEntity<?> getAllQuestionsInGame() {
     try {
       List<QuestionModel> questions = conversationService.getAllQuestions();
       return ResponseEntity.ok(questions);
@@ -145,18 +173,14 @@ public class ConversationController {
       return ResponseEntity.status(500).body(Map.of("error", "error fetching questions", "message", e.getMessage()));
     }
   }
-  
-  @DeleteMapping("delete-question")
-  public ResponseEntity<?> deleteQuestion(@RequestBody Map<String, String> payload) {
-    String questionId = payload.get("questionId");
-    if (questionId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "no questionId provided"));
-    }
+
+  @GetMapping("/get-all-answers")
+  public ResponseEntity<?> getAllAnswers() {
     try {
-      conversationService.deleteQuestion(questionId);
-      return ResponseEntity.ok(Map.of("successfully deleted question", questionId));
+      List<AnswerModel> answers = conversationService.getAllAnswers();
+      return ResponseEntity.ok(answers);
     } catch (Exception e) {
-      return ResponseEntity.status(500).body(Map.of("error", "could not delete question", "message", e.getMessage()));
+      return ResponseEntity.status(500).body(Map.of("error", "error fetching answers", "message", e.getMessage()));
     }
   }
 
