@@ -38,21 +38,23 @@ public class ConversationService {
         this.playerService = playerService;
     }
 
-    public void submitQuestion(String gameId, String playerId, String content) {
+    public QuestionModel submitQuestion(String gameId, String playerId, String content) {
         if (!gameService.confirmGameState(gameId, GameState.QUESTION)) {
             throw new IllegalStateException("gameState must be 'QUESTION' to submit a question");
         }
         QuestionModel question = new QuestionModel(playerId, content);
         questionDatabase.addQuestion(question);
+        return question;
     }
 
-    public void submitAnswer(String gameId, String playerId, String questionId, String content) {
+    public AnswerModel submitAnswer(String gameId, String playerId, String questionId, String content) {
         if (!gameService.confirmGameState(gameId, GameState.ANSWER)) {
             throw new IllegalStateException("gameState must be 'ANSWER' to submit an answer");
         }
         AnswerModel answer = new AnswerModel(playerId, questionId, content);
         answerDatabase.addAnswer(answer);
         questionAnswerDatabase.addQuestionAnswer(questionId, answer.getAnswerId());
+        return answer;
     }
 
     public QuestionModel getQuestionById(String questionId) {
@@ -102,13 +104,18 @@ public class ConversationService {
             PlayerModel nextPlayer = players.get((i + 1) % numPlayers);
             PlayerModel prevPlayer = players.get((i + numPlayers - 1) % numPlayers);
 
-            String currentPlayerQuestionId = currentPlayer.getSubmittedQuestionId();
+            String nextPlayerId = nextPlayer.getPlayerId();
+            String prevPlayerId = prevPlayer.getPlayerId();
+            QuestionModel currentPlayerQuestion = questionDatabase.getQuestionByPlayerId(currentPlayer.getPlayerId());
+            String currentPlayerQuestionId = currentPlayerQuestion.getQuestionId();
 
-            // Add the current player's question to the list of the next and previous
-            // players
-            nextPlayer.addQuestionIdToAnswer(currentPlayerQuestionId);
-            prevPlayer.addQuestionIdToAnswer(currentPlayerQuestionId);
+            playerQuestionDatabase.addPlayerQuestion(nextPlayerId, currentPlayerQuestionId);
+            playerQuestionDatabase.addPlayerQuestion(prevPlayerId, currentPlayerQuestionId);
         }
+    }
+
+    public List<QuestionModel> getAllQuestions() {
+        return questionDatabase.getAllQuestions();
     }
 
 }

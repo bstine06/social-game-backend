@@ -17,6 +17,8 @@ import com.brettstine.social_game_backend.service.ConversationService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @CrossOrigin(origins = "${frontend.url}", allowCredentials = "true")
@@ -71,8 +73,8 @@ public class ConversationController {
     if (gameId == null) {
       return ResponseEntity.status(400).body(Map.of("error", "no gameId provided"));
     }
-    String question = payload.get("question");
-    if (question == null) {
+    String questionContent = payload.get("question");
+    if (questionContent == null) {
       return ResponseEntity.status(400).body(Map.of("error", "no question provided"));
     }
     String playerId = CookieUtil.getDataFromCookie(request, "playerId");
@@ -81,8 +83,8 @@ public class ConversationController {
     }
 
     try {
-      conversationService.submitQuestion(gameId, playerId, question);
-      return ResponseEntity.ok(Map.of("success", "Question submitted"));
+      QuestionModel question = conversationService.submitQuestion(gameId, playerId, questionContent);
+      return ResponseEntity.ok(question);
     } catch (Exception e) {
       return ResponseEntity.status(500).body(Map.of("error", "error submitting question", "message", e.getMessage()));
     }
@@ -116,8 +118,8 @@ public class ConversationController {
     if (questionId == null) {
       return ResponseEntity.status(400).body(Map.of("error", "no questionId provided"));
     }
-    String answer = payload.get("answer");
-    if (answer == null) {
+    String answerContent = payload.get("answer");
+    if (answerContent == null) {
       return ResponseEntity.status(400).body(Map.of("error", "no answer provided"));
     }
     String playerId = CookieUtil.getDataFromCookie(request, "playerId");
@@ -126,11 +128,22 @@ public class ConversationController {
     }
 
     try {
-      conversationService.submitAnswer(gameId, playerId, questionId, answer);
-      return ResponseEntity.ok(Map.of("success", "Answer submitted"));
+      AnswerModel answer = conversationService.submitAnswer(gameId, playerId, questionId, answerContent);
+      return ResponseEntity.ok(answer);
     } catch (Exception e) {
       return ResponseEntity.status(500).body(Map.of("error", "error submitting answer", "message", e.getMessage()));
     }
   }
+
+  @GetMapping("/get-all-questions")
+  public ResponseEntity<?> getAllQuestions() {
+    try {
+      List<QuestionModel> questions = conversationService.getAllQuestions();
+      return ResponseEntity.ok(questions);
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(Map.of("error", "error fetching questions", "message", e.getMessage()));
+    }
+  }
+  
 
 }
