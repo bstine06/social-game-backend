@@ -21,6 +21,7 @@ public class ConversationService {
     private final AnswerDatabase answerDatabase;
     private final QuestionAnswerDatabase questionAnswerDatabase;
     private final PlayerQuestionDatabase playerQuestionDatabase;
+    
     private final GameService gameService;
     private final PlayerService playerService;
 

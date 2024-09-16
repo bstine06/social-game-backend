@@ -11,6 +11,7 @@ import java.util.List;
 public class PlayerService {
 
     private final PlayerDatabase playerDatabase;
+    
     private final GameService gameService;
 
     public PlayerService(PlayerDatabase playerDatabase, GameService gameService) {
