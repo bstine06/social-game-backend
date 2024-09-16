@@ -22,9 +22,9 @@ public class QuestionDatabase {
         questionStore.put(questionModel.getQuestionId(), questionModel);
     }
 
-    public void deleteAnswer(String questionId) {
+    public void deleteQuestion(String questionId) {
         if (!questionStore.containsKey(questionId)) {
-            throw new IllegalArgumentException("Answer not found for ID: " + questionId);
+            throw new IllegalArgumentException("Question not found for ID: " + questionId);
         }
         questionStore.remove(questionId);
     }

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -145,5 +146,18 @@ public class ConversationController {
     }
   }
   
+  @DeleteMapping("delete-question")
+  public ResponseEntity<?> deleteQuestion(@RequestBody Map<String, String> payload) {
+    String questionId = payload.get("questionId");
+    if (questionId == null) {
+      return ResponseEntity.status(400).body(Map.of("error", "no questionId provided"));
+    }
+    try {
+      conversationService.deleteQuestion(questionId);
+      return ResponseEntity.ok(Map.of("successfully deleted question", questionId));
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(Map.of("error", "could not delete question", "message", e.getMessage()));
+    }
+  }
 
 }

@@ -57,6 +57,14 @@ public class ConversationService {
         return answer;
     }
 
+    public void deleteQuestion(String questionId) {
+        questionDatabase.deleteQuestion(questionId);
+    }
+
+    public void deleteAnswer(String answerId) {
+        answerDatabase.deleteAnswer(answerId);
+    }
+
     public QuestionModel getQuestionById(String questionId) {
         return questionDatabase.getQuestionById(questionId);
     }
