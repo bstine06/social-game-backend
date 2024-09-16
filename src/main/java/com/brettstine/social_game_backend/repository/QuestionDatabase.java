@@ -54,4 +54,14 @@ public class QuestionDatabase {
         List<QuestionModel> questions = new ArrayList<>(questionStore.values());
         return questions;
     }
+
+    public List<QuestionModel> getAllQuestionsByGameId(String gameId) {
+        List<QuestionModel> questions = new ArrayList<>();
+        for (QuestionModel question : questionStore.values()) {
+            if (question.getGameId().equals(gameId)) {
+                questions.add(question);
+            }
+        }
+        return questions;
+    }
 }

@@ -48,6 +48,10 @@ public class ConversationService {
         return answer;
     }
 
+    public boolean hasTwoAnswers(String questionId) {
+        return questionAnswerDatabase.hasExactlyTwoAnswers(questionId);
+    }
+
     public void deleteQuestion(String questionId) {
         questionDatabase.deleteQuestion(questionId);
     }
@@ -90,6 +94,10 @@ public class ConversationService {
 
     public List<QuestionModel> getAllQuestions() {
         return questionDatabase.getAllQuestions();
+    }
+
+    public List<QuestionModel> getAllQuestionsByGameId(String gameId) {
+        return questionDatabase.getAllQuestionsByGameId(gameId);
     }
 
     public List<AnswerModel> getAllAnswers() {

@@ -66,6 +66,15 @@ public class GameFlowService {
                 assignQuestionsToPlayers(gameId);
                 gameService.setGameState(gameId, GameState.ANSWER);
             }
+        } else 
+        if (game.getGameState() == GameState.ANSWER) {
+            // If all questions have recieved two answers, advance to the VOTE phase
+            List<QuestionModel> questions = conversationService.getAllQuestionsByGameId(gameId);
+            boolean allQuestionsHaveTwoAnswers = questions.stream()
+                .allMatch(question -> conversationService.hasTwoAnswers(question.getQuestionId()));
+            if (allQuestionsHaveTwoAnswers) {
+                gameService.setGameState(gameId, GameState.VOTE);
+            }
         }
     }
 

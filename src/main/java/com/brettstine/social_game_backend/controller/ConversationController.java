@@ -168,11 +168,12 @@ public class ConversationController {
     }
 
     try {
-      gameFlowService.ensureGameState(gameId, GameState.QUESTION);
+      gameFlowService.ensureGameState(gameId, GameState.ANSWER);
       gameFlowService.validateGame(gameId);
       gameFlowService.validatePlayer(playerId);
       gameFlowService.validateQuestion(questionId);
       AnswerModel answer = conversationService.submitAnswer(gameId, playerId, questionId, answerContent);
+      gameFlowService.tryAdvanceGameState(gameId);
       return ResponseEntity.ok(answer);
     } catch (Exception e) {
       return ResponseEntity.status(500).body(Map.of("error", "error submitting answer", "message", e.getMessage()));
