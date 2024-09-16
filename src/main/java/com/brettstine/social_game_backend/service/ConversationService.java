@@ -42,7 +42,7 @@ public class ConversationService {
         if (!gameService.confirmGameState(gameId, GameState.QUESTION)) {
             throw new IllegalStateException("gameState must be 'QUESTION' to submit a question");
         }
-        QuestionModel question = new QuestionModel(playerId, content);
+        QuestionModel question = new QuestionModel(gameId, playerId, content);
         questionDatabase.addQuestion(question);
         return question;
     }
@@ -51,7 +51,7 @@ public class ConversationService {
         if (!gameService.confirmGameState(gameId, GameState.ANSWER)) {
             throw new IllegalStateException("gameState must be 'ANSWER' to submit an answer");
         }
-        AnswerModel answer = new AnswerModel(playerId, questionId, content);
+        AnswerModel answer = new AnswerModel(gameId, playerId, questionId, content);
         answerDatabase.addAnswer(answer);
         questionAnswerDatabase.addQuestionAnswer(questionId, answer.getAnswerId());
         return answer;

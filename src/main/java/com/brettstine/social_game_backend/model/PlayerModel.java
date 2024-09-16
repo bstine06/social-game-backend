@@ -1,7 +1,5 @@
 package com.brettstine.social_game_backend.model;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 public class PlayerModel {
