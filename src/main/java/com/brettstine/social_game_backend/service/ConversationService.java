@@ -20,18 +20,15 @@ public class ConversationService {
     private final AnswerDatabase answerDatabase;
     private final QuestionAnswerDatabase questionAnswerDatabase;
     private final PlayerQuestionDatabase playerQuestionDatabase;
-    private final PlayerService playerService;
 
     public ConversationService(AnswerDatabase answerDatabase,
             QuestionDatabase questionDatabase,
             QuestionAnswerDatabase questionAnswerDatabase,
-            PlayerQuestionDatabase playerQuestionDatabase,
-            PlayerService playerService) {
+            PlayerQuestionDatabase playerQuestionDatabase) {
         this.questionDatabase = questionDatabase;
         this.answerDatabase = answerDatabase;
         this.questionAnswerDatabase = questionAnswerDatabase;
         this.playerQuestionDatabase = playerQuestionDatabase;
-        this.playerService = playerService;
     }
 
     public QuestionModel submitQuestion(String gameId, String playerId, String content) {

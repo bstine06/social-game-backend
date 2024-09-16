@@ -1,6 +1,7 @@
 package com.brettstine.social_game_backend.controller;
 
 import com.brettstine.social_game_backend.model.PlayerModel;
+import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.PlayerService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
@@ -30,9 +31,11 @@ public class PlayerController {
     private static final Logger logger = LoggerFactory.getLogger(PlayerController.class);
 
     private final PlayerService playerService;
+    private final GameFlowService gameFlowService;
 
-    public PlayerController(PlayerService playerService) {
+    public PlayerController(PlayerService playerService, GameFlowService gameFlowService) {
         this.playerService = playerService;
+        this.gameFlowService = gameFlowService;
     }
 
     @PostMapping("/create-player")
@@ -107,6 +110,7 @@ public class PlayerController {
         }
 
         try {
+            gameFlowService.validateGame(gameId);
             List<PlayerModel> allPlayers = playerService.getAllPlayersByGameId(gameId);
             return ResponseEntity.ok(allPlayers);
         } catch (Exception e) {

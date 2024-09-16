@@ -44,12 +44,7 @@ public class PlayerService {
     }
 
     public List<PlayerModel> getAllPlayersByGameId(String gameId) {
-        try {
-            gameService.getGame(gameId);
-            return playerDatabase.getAllPlayersByGameId(gameId);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
+        return playerDatabase.getAllPlayersByGameId(gameId);
     }
 
     public List<PlayerModel> getAllPlayers() {
