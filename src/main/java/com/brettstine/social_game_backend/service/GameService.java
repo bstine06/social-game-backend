@@ -5,17 +5,17 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.brettstine.social_game_backend.model.GameModel;
-import com.brettstine.social_game_backend.repository.GameDatabase;
+import com.brettstine.social_game_backend.repository.GameRepository;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.utils.GameCodeGenerator;
 
 @Service
 public class GameService {
 
-    private final GameDatabase gameDatabase;
+    private final GameRepository gameRepository;
 
-    public GameService(GameDatabase gameDatabase) {
-        this.gameDatabase = gameDatabase;
+    public GameService(GameRepository gameRepository) {
+        this.gameRepository = gameRepository;
     }
 
     public GameModel createGame() {
@@ -24,7 +24,7 @@ public class GameService {
         int maxAttempts = 100; // Limit number of tries to find a game code.
         // If this ever becomes a problem, we can scale the game codes to be longer.
 
-        while (existsGameWithId(gameCode)) {
+        while (gameRepository.existsById(gameCode)) {
             if (attempts >= maxAttempts) {
                 throw new IllegalStateException(
                         "Unable to generate a unique game code after " + maxAttempts + " attempts");
@@ -34,40 +34,37 @@ public class GameService {
         }
 
         GameModel game = new GameModel(gameCode);
-        gameDatabase.addGame(game);
-        return game;
-    }
-
-    public boolean existsGameWithId(String gameId) {
-        return gameDatabase.hasGameByGameId(gameId);
+        return gameRepository.save(game);
     }
 
     public void deleteGame(String gameId) {
-        gameDatabase.deleteGame(gameId);
+        if (!gameRepository.existsById(gameId)) {
+            throw new IllegalArgumentException("Game not found with ID: " + gameId);
+        }
+        gameRepository.deleteById(gameId);
     }
 
     public GameModel getGame(String gameId) {
-        return gameDatabase.getGame(gameId);
+        return gameRepository.findById(gameId).orElseThrow(() -> new IllegalArgumentException("Game not found with ID: " + gameId));
     }
 
     public GameModel setGameState(String gameId, GameState gameState) {
-        GameModel game = gameDatabase.getGame(gameId);
+        GameModel game = getGame(gameId);
         game.setGameState(gameState);
-        gameDatabase.updateGame(gameId, game);
-        return game;
+        return gameRepository.save(game);
     }
 
     public GameState getGameState(String gameId) {
-        return gameDatabase.getGame(gameId).getGameState();
+        return getGame(gameId).getGameState();
     }
 
     public boolean confirmGameState(String gameId, GameState expectedGameState) {
-        GameState actualGameState = gameDatabase.getGame(gameId).getGameState();
+        GameState actualGameState = getGame(gameId).getGameState();
         return (expectedGameState == actualGameState);
     }
 
     public List<GameModel> getAllGames() {
-        List<GameModel> allGames = gameDatabase.getAllGames();
+        List<GameModel> allGames = gameRepository.findAll();
         return allGames;
     }
 }
