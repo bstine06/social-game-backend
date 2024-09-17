@@ -3,6 +3,7 @@ package com.brettstine.social_game_backend.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,184 +21,208 @@ import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.RequestParam;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @CrossOrigin(origins = "${frontend.url}", allowCredentials = "true")
 @RequestMapping("/conversation")
 public class ConversationController {
 
-  private final ConversationService conversationService;
-  private final GameFlowService gameFlowService;
+    private static final Logger logger = LoggerFactory.getLogger(ConversationController.class);
 
-  public ConversationController(ConversationService conversationService, GameFlowService gameFlowService) {
-    this.conversationService = conversationService;
-    this.gameFlowService = gameFlowService;
-  }
+    private final ConversationService conversationService;
+    private final GameFlowService gameFlowService;
 
-  @GetMapping("/get-question")
-  public ResponseEntity<?> getQuestionFromId(@RequestBody Map<String, String> payload) {
-    String questionId = payload.get("questionId");
-    if (questionId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "no questionId provided"));
-    }
-    QuestionModel questionModel = conversationService.getQuestionById(questionId);
-    return ResponseEntity.ok(questionModel);
-  }
-
-  @GetMapping("/get-answer")
-  public ResponseEntity<?> getAnswerFromId(@RequestBody Map<String, String> payload) {
-    String answerId = payload.get("answerId");
-    if (answerId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "no answerId provided"));
-    }
-    AnswerModel answerModel = conversationService.getAnswerById(answerId);
-    return ResponseEntity.ok(answerModel);
-  }
-
-  @DeleteMapping("/delete-question")
-  public ResponseEntity<?> deleteQuestion(@RequestBody Map<String, String> payload) {
-    String questionId = payload.get("questionId");
-    if (questionId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "no questionId provided"));
-    }
-    try {
-      conversationService.deleteQuestion(questionId);
-      return ResponseEntity.ok(Map.of("successfully deleted question", questionId));
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body(Map.of("error", "could not delete question", "message", e.getMessage()));
-    }
-  }
-
-  @DeleteMapping("/delete-answer")
-  public ResponseEntity<?> deleteAnswer(@RequestBody Map<String, String> payload) {
-    String answerId = payload.get("answerId");
-    if (answerId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "no answerId provided"));
-    }
-    try {
-      conversationService.deleteAnswer(answerId);
-      return ResponseEntity.ok(Map.of("successfully deleted answer", answerId));
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body(Map.of("error", "could not delete answer", "message", e.getMessage()));
-    }
-  }
-
-  @GetMapping("/get-answers-for-question")
-  public ResponseEntity<?> getAnswersForQuestion(@RequestBody Map<String, String> payload) {
-    String questionId = payload.get("questionId");
-    if (questionId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "no questionId provided"));
+    public ConversationController(ConversationService conversationService, GameFlowService gameFlowService) {
+        this.conversationService = conversationService;
+        this.gameFlowService = gameFlowService;
     }
 
-    try {
-      List<AnswerModel> answers = conversationService.getAnswersForQuestion(questionId);
-      return ResponseEntity.ok(answers);
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body(Map.of("error", "error fetching answers for question", "message", e.getMessage()));
-    }
-  }
-
-  @PostMapping("/submit-question")
-  public ResponseEntity<?> submitQuestion(HttpServletRequest request, @RequestBody Map<String, String> payload) {
-
-    String gameId = payload.get("gameId");
-    if (gameId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "no gameId provided"));
-    }
-    String questionContent = payload.get("question");
-    if (questionContent == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "no question provided"));
-    }
-    String playerId = CookieUtil.getDataFromCookie(request, "playerId");
-    if (playerId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "No playerId found"));
+    @GetMapping("/get-question")
+    public ResponseEntity<?> getQuestionFromId(@RequestBody Map<String, String> payload) {
+        String questionId = payload.get("questionId");
+        try {
+            QuestionModel questionModel = conversationService.getQuestionById(questionId);
+            logger.info("Successfully executed getQuestion with id: {}", questionId);
+            return ResponseEntity.ok(questionModel);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error getting question with id: {}", questionId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Could not get question", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error getting question with id: {}", questionId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Could not get question", "message", e.getMessage()));
+        }
     }
 
-    try {
-      gameFlowService.ensureGameState(gameId, GameState.QUESTION);
-      gameFlowService.validateGame(gameId);
-      gameFlowService.validatePlayer(playerId);
-      QuestionModel question = conversationService.submitQuestion(gameId, playerId, questionContent);
-      gameFlowService.tryAdvanceGameState(gameId);
-      return ResponseEntity.ok(question);
-    } catch (IllegalArgumentException e) {
-      return ResponseEntity.status(400).body(Map.of("error", "error submitting question", "message", e.getMessage()));
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body(Map.of("error", "error submitting question", "message", e.getMessage()));
-    }
-  }
-
-  @GetMapping("/get-questions-for-player")
-  public ResponseEntity<?> getQuestionsForPlayer(HttpServletRequest request) {
-
-    String playerId = CookieUtil.getDataFromCookie(request, "playerId");
-    if (playerId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "No playerId found"));
+    @GetMapping("/get-answer")
+    public ResponseEntity<?> getAnswerFromId(@RequestBody Map<String, String> payload) {
+        String answerId = payload.get("answerId");
+        try {
+            AnswerModel answerModel = conversationService.getAnswerById(answerId);
+            logger.info("Successfully executed getAnswer with id: {}", answerId);
+            return ResponseEntity.ok(answerModel);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error getting answer with id: {}", answerId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Could not get answer", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error getting answer with id: {}", answerId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Could not get answer", "message", e.getMessage()));
+        }
     }
 
-    try {
-      gameFlowService.validatePlayer(playerId);
-      List<QuestionModel> questions = conversationService.getQuestionsForPlayer(playerId);
-      return ResponseEntity.ok(questions);
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body(Map.of("error", "error fetching questions", "message", e.getMessage()));
-    }
-  }
-
-  @PostMapping("/submit-answer")
-  public ResponseEntity<?> submitAnswer(HttpServletRequest request, @RequestBody Map<String, String> payload) {
-
-    // gameId needs to be checked to ensure that the game state is correct for submitting answers
-    String gameId = payload.get("gameId");
-    if (gameId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "no gameId provided"));
-    }
-    String questionId = payload.get("questionId");
-    if (questionId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "no questionId provided"));
-    }
-    String answerContent = payload.get("answer");
-    if (answerContent == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "no answer provided"));
-    }
-    String playerId = CookieUtil.getDataFromCookie(request, "playerId");
-    if (playerId == null) {
-      return ResponseEntity.status(400).body(Map.of("error", "No playerId found"));
+    @DeleteMapping("/delete-question")
+    public ResponseEntity<?> deleteQuestion(@RequestBody Map<String, String> payload) {
+        String questionId = payload.get("questionId");
+        try {
+            conversationService.deleteQuestion(questionId);
+            logger.info("Successfully deleted question with id: {}", questionId);
+            return ResponseEntity.ok(Map.of("message", "Successfully deleted question", "questionId", questionId));
+        } catch (IllegalArgumentException e) {
+            logger.error("Error deleting question with id: {}", questionId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "could not delete question", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error deleting question with id: {}", questionId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "could not delete question", "message", e.getMessage()));
+        }
     }
 
-    try {
-      gameFlowService.ensureGameState(gameId, GameState.ANSWER);
-      gameFlowService.validateGame(gameId);
-      gameFlowService.validatePlayer(playerId);
-      gameFlowService.validateQuestion(questionId);
-      AnswerModel answer = conversationService.submitAnswer(gameId, playerId, questionId, answerContent);
-      gameFlowService.tryAdvanceGameState(gameId);
-      return ResponseEntity.ok(answer);
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body(Map.of("error", "error submitting answer", "message", e.getMessage()));
+    @DeleteMapping("/delete-answer")
+    public ResponseEntity<?> deleteAnswer(@RequestBody Map<String, String> payload) {
+        String answerId = payload.get("answerId");
+        try {
+            conversationService.deleteAnswer(answerId);
+            logger.info("Successfully deleted answer with id: {}", answerId);
+            return ResponseEntity.ok(Map.of("message", "Successfully deleted answer", "answerId", answerId));
+        } catch (IllegalArgumentException e) {
+            logger.error("Error deleting answer with id: {}", answerId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "could not delete answer", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error deleting answer with id: {}", answerId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "could not delete answer", "message", e.getMessage()));
+        }
     }
-  }
 
-  @GetMapping("/get-all-questions")
-  public ResponseEntity<?> getAllQuestionsInGame() {
-    try {
-      List<QuestionModel> questions = conversationService.getAllQuestions();
-      return ResponseEntity.ok(questions);
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body(Map.of("error", "error fetching questions", "message", e.getMessage()));
+    @GetMapping("/get-answers-for-question")
+    public ResponseEntity<?> getAnswersForQuestion(@RequestBody Map<String, String> payload) {
+        String questionId = payload.get("questionId");
+        try {
+            List<AnswerModel> answers = conversationService.getAnswersForQuestion(questionId);
+            logger.info("Successfully retrieved answers for question with id: {}", questionId);
+            return ResponseEntity.ok(answers);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error retrieving answers for question with id: {}", questionId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "error fetching answers for question", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error retrieving answers for question with id: {}", questionId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "error fetching answers for question", "message", e.getMessage()));
+        }
     }
-  }
 
-  @GetMapping("/get-all-answers")
-  public ResponseEntity<?> getAllAnswers() {
-    try {
-      List<AnswerModel> answers = conversationService.getAllAnswers();
-      return ResponseEntity.ok(answers);
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body(Map.of("error", "error fetching answers", "message", e.getMessage()));
+    @PostMapping("/submit-question")
+    public ResponseEntity<?> submitQuestion(HttpServletRequest request, @RequestBody Map<String, String> payload) {
+        String gameId = payload.get("gameId");
+        String questionContent = payload.get("question");
+        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+        try {
+            gameFlowService.ensureGameState(gameId, GameState.QUESTION);
+            gameFlowService.validateGame(gameId);
+            gameFlowService.validatePlayer(playerId);
+            QuestionModel question = conversationService.submitQuestion(gameId, playerId, questionContent);
+            logger.info("Game: {} : Successfully submitted question with id: {}", gameId, question.getQuestionId());
+            gameFlowService.tryAdvanceGameState(gameId);
+            return ResponseEntity.ok(question);
+        } catch (IllegalArgumentException e) {
+            logger.error("Game: {} : Error submitting question", gameId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "error submitting question", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Game: {} : Error submitting question", gameId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "error submitting question", "message", e.getMessage()));
+        }
     }
-  }
+
+    @GetMapping("/get-questions-for-player")
+    public ResponseEntity<?> getQuestionsForPlayer(HttpServletRequest request) {
+        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+        try {
+            gameFlowService.validatePlayer(playerId);
+            List<QuestionModel> questions = conversationService.getQuestionsForPlayer(playerId);
+            logger.info("Successfully retrieved questions for player with id: {}", playerId);
+            return ResponseEntity.ok(questions);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error retrieving questions for player with id: {}", playerId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "error submitting question", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error retrieving questions for player with id: {}", playerId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "error submitting question", "message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/submit-answer")
+    public ResponseEntity<?> submitAnswer(HttpServletRequest request, @RequestBody Map<String, String> payload) {
+        String gameId = payload.get("gameId");
+        String questionId = payload.get("questionId");
+        String answerContent = payload.get("answer");
+        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+        try {
+            gameFlowService.ensureGameState(gameId, GameState.ANSWER);
+            gameFlowService.validateGame(gameId);
+            gameFlowService.validatePlayer(playerId);
+            gameFlowService.validateQuestion(questionId);
+            AnswerModel answer = conversationService.submitAnswer(gameId, playerId, questionId, answerContent);
+            logger.info("Game: {} : Successfully submitted answer with id: {}", gameId, answer.getAnswerId());
+            gameFlowService.tryAdvanceGameState(gameId);
+            return ResponseEntity.ok(answer);
+        } catch (IllegalArgumentException e) {
+            logger.error("Game: {} : Error submitting answer", gameId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "error submitting answer", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Game: {} : Error submitting answer", gameId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "error submitting answer", "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/get-all-questions")
+    public ResponseEntity<?> getAllQuestionsInGame() {
+        try {
+            List<QuestionModel> questions = conversationService.getAllQuestions();
+            logger.info("Successfully retrieved all questions");
+            return ResponseEntity.ok(questions);
+        } catch (Exception e) {
+            logger.error("Error retrieving all questions", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "error fetching questions", "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/get-all-answers")
+    public ResponseEntity<?> getAllAnswers() {
+        try {
+            List<AnswerModel> answers = conversationService.getAllAnswers();
+            logger.info("Successfully retrieved all answers");
+            return ResponseEntity.ok(answers);
+        } catch (Exception e) {
+            logger.error("Error retrieving all answers", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "error fetching answers", "message", e.getMessage()));
+        }
+    }
 
 }

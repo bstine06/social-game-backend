@@ -2,6 +2,8 @@ package com.brettstine.social_game_backend.service;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.brettstine.social_game_backend.model.GameModel;
@@ -11,6 +13,8 @@ import com.brettstine.social_game_backend.model.QuestionModel;
 
 @Service
 public class GameFlowService {
+
+    private static final Logger logger = LoggerFactory.getLogger(GameFlowService.class);
 
     private final GameService gameService;
     private final PlayerService playerService;
@@ -55,6 +59,7 @@ public class GameFlowService {
         if (game.getGameState() == GameState.LOBBY) {
             checkMinimumPlayersForQuestionState(gameId);  // Ensure there are enough players before transitioning
             gameService.setGameState(gameId, GameState.QUESTION);
+            logger.info("Game: {} : Advanced gameState to: {}", gameId, game.getGameState());
         } else 
         if (game.getGameState() == GameState.QUESTION) {
             // If all players have submitted their questions, advance to the ANSWER phase
@@ -63,8 +68,11 @@ public class GameFlowService {
                 .allMatch(player -> conversationService.hasSubmittedQuestion(player.getPlayerId()));
             if (allPlayersSubmittedQuestions) {
                 gameService.setGameState(gameId, GameState.ASSIGN);
+                logger.info("Game: {} : All players submitted questions, advanced gameState to: {}", gameId, game.getGameState());
                 assignQuestionsToPlayers(gameId);
+                logger.info("Game: {} : Successfully assigned questions", gameId);
                 gameService.setGameState(gameId, GameState.ANSWER);
+                logger.info("Game: {} : Advanced gameState to : {}", gameId, game.getGameState());
             }
         } else 
         if (game.getGameState() == GameState.ANSWER) {
@@ -74,6 +82,7 @@ public class GameFlowService {
                 .allMatch(question -> conversationService.hasTwoAnswers(question.getQuestionId()));
             if (allQuestionsHaveTwoAnswers) {
                 gameService.setGameState(gameId, GameState.VOTE);
+                logger.info("Game: {} : All questions received two answers, advanced gameState to : {}", gameId, game.getGameState());
             }
         }
     }

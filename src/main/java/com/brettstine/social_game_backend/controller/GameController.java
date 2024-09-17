@@ -46,7 +46,8 @@ public class GameController {
             return ResponseEntity.ok(game);
         } catch (Exception e) {
             logger.error("Error creating game: ", e);
-            return ResponseEntity.status(500).body(Map.of("error", "could not create game", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "could not create game", "message", e.getMessage()));
         }
     }
 
@@ -59,10 +60,12 @@ public class GameController {
             return ResponseEntity.ok(Map.of("message", "Successfully deleted game", "gameId", gameId));
         } catch (IllegalArgumentException e) {
             logger.error("Game: {} : Error deleting game", gameId, e);
-            return ResponseEntity.status(400).body(Map.of("error", "could not delete game", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "could not delete game", "message", e.getMessage()));
         } catch (Exception e) {
             logger.error("Game: {} : Error deleting game", gameId, e);
-            return ResponseEntity.status(500).body(Map.of("error", "could not delete game", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "could not delete game", "message", e.getMessage()));
         }
     }
 
@@ -90,15 +93,15 @@ public class GameController {
         try {
             gameFlowService.tryAdvanceGameState(gameId);
             GameModel game = gameService.getGame(gameId);
-            logger.info("Game: {} : Successfully advanced gameState to: {}", gameId, game.getGameState());
+            // log successful game state advancement inside of gameFlowService
             return ResponseEntity.ok(game);
         } catch (IllegalArgumentException e) {
             logger.error("Game: {} : Error advancing state", gameId, e);
-            return ResponseEntity.status(400)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Could not advance gameState", "message", e.getMessage()));
         } catch (Exception e) {
             logger.error("Game: {} : Error advancing state", gameId, e);
-            return ResponseEntity.status(500)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Could not advance gameState", "message", e.getMessage()));
         }
     }
@@ -114,15 +117,15 @@ public class GameController {
             return ResponseEntity.ok(updatedGame);
         } catch (IllegalArgumentException e) {
             logger.error("Game: {} : Error while updating gameState", gameId, e);
-            return ResponseEntity.status(400)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Could not update gameState", "message", e.getMessage()));
         } catch (IllegalStateException e) {
             logger.error("Game: {} : Error while updating gameState", gameId, e);
-            return ResponseEntity.status(400)
+            return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "Could not update gameState", "message", e.getMessage()));
         } catch (Exception e) {
             logger.error("Game: {} : Error while updating gameState", gameId, e);
-            return ResponseEntity.status(500)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Could not update gameState", "message", e.getMessage()));
         }
     }
@@ -135,7 +138,7 @@ public class GameController {
             return ResponseEntity.ok(allGames);
         } catch (Exception e) {
             logger.error("Error while getting all games", e);
-            return ResponseEntity.status(500)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Could not get all games", "message", e.getMessage()));
         }
     }
