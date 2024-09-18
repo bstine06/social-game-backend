@@ -106,8 +106,8 @@ public class GameFlowService {
             QuestionModel nextPlayer2Question = conversationService.getQuestionByPlayerId(nextPlayer2.getPlayerId());
     
             // Add both questions to the current player
-            conversationService.addQuestionForPlayer(currentPlayer.getPlayerId(), nextPlayer1Question.getQuestionId());
-            conversationService.addQuestionForPlayer(currentPlayer.getPlayerId(), nextPlayer2Question.getQuestionId());
+            conversationService.addQuestionForPlayer(gameId, currentPlayer.getPlayerId(), nextPlayer1Question.getQuestionId());
+            conversationService.addQuestionForPlayer(gameId, currentPlayer.getPlayerId(), nextPlayer2Question.getQuestionId());
         }
     }
     

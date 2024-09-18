@@ -87,13 +87,13 @@ public class ConversationService {
         return questions;
     }
 
-    public void addQuestionForPlayer(String playerId, String questionId) {
+    public void addQuestionForPlayer(String gameId, String playerId, String questionId) {
         // Validate that the player has not been assigned more than 2 questions
         List<QuestionAssignmentModel> existingAssignments = questionAssignmentRepository.findAllByPlayerId(playerId);
         if (existingAssignments.size() >= 2) {
             throw new IllegalStateException("Player with ID " + playerId + " has already been assigned 2 questions.");
         }
-        QuestionAssignmentModel questionAssignment = new QuestionAssignmentModel(questionId, playerId);
+        QuestionAssignmentModel questionAssignment = new QuestionAssignmentModel(questionId, playerId, gameId);
         questionAssignmentRepository.save(questionAssignment);
     }
 
