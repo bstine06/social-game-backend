@@ -3,8 +3,6 @@ package com.brettstine.social_game_backend.model;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import org.springframework.cglib.core.Local;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -27,10 +25,10 @@ public class AnswerModel {
   @Column(name = "question_id", nullable = false)
   private String questionId;
 
-  @Column(name = "content")
+  @Column(name = "content", nullable = false)
   private String content;
 
-  @Column(name = "creation_time")
+  @Column(name = "creation_time", nullable = false)
   private LocalDateTime creationTime;
 
   public AnswerModel() {
