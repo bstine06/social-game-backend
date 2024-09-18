@@ -44,7 +44,7 @@ public class ConversationService {
     public AnswerModel submitAnswer(String gameId, String playerId, String questionId, String content) {
         AnswerModel answer = new AnswerModel(gameId, playerId, questionId, content);
         answer = answerRepository.save(answer);
-        QuestionAnswerModel questionAnswer = new QuestionAnswerModel(questionId, answer.getAnswerId());
+        QuestionAnswerModel questionAnswer = new QuestionAnswerModel(questionId, answer.getAnswerId(), gameId);
         questionAnswerRepository.save(questionAnswer);
         return answer;
     }

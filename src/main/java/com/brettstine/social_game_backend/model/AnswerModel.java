@@ -1,6 +1,9 @@
 package com.brettstine.social_game_backend.model;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
+
+import org.springframework.cglib.core.Local;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,6 +30,9 @@ public class AnswerModel {
   @Column(name = "content")
   private String content;
 
+  @Column(name = "creation_time")
+  private LocalDateTime creationTime;
+
   public AnswerModel() {
   }
 
@@ -36,6 +42,7 @@ public class AnswerModel {
     this.answerId = UUID.randomUUID().toString();
     this.questionId = questionId;
     this.content = content;
+    this.creationTime = LocalDateTime.now();
   }
 
   public String getGameId() {
@@ -56,6 +63,10 @@ public class AnswerModel {
 
   public String getContent() {
     return content;
+  }
+
+  public LocalDateTime getCreationTime() {
+    return creationTime;
   }
 
 }

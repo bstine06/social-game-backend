@@ -1,6 +1,9 @@
 package com.brettstine.social_game_backend.model;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
+
+import org.springframework.cglib.core.Local;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,6 +24,9 @@ public class PlayerModel {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "creation_time", nullable = false)
+    private LocalDateTime creationTime;
+
     public PlayerModel() {
     }
 
@@ -28,6 +34,7 @@ public class PlayerModel {
         this.playerId = UUID.randomUUID().toString();
         this.gameId = gameId;
         this.name = name;
+        this.creationTime = LocalDateTime.now();
     }
 
     // Getters and Setters
@@ -45,5 +52,9 @@ public class PlayerModel {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public LocalDateTime getCreationTime() {
+        return creationTime;
     }
 }

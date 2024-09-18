@@ -1,5 +1,6 @@
 package com.brettstine.social_game_backend.model;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -24,6 +25,9 @@ public class QuestionModel {
     @Column(name = "content")
     private String content;
 
+    @Column(name = "creation_time", nullable = false)
+    private LocalDateTime creationTime;
+
     public QuestionModel() {
     }
 
@@ -32,6 +36,7 @@ public class QuestionModel {
         this.playerId = playerId;
         this.questionId = UUID.randomUUID().toString();
         this.content = content;
+        this.creationTime = LocalDateTime.now();
     }
 
     public String getGameId() {
@@ -48,6 +53,10 @@ public class QuestionModel {
 
     public String getContent() {
         return content;
+    }
+
+    public LocalDateTime getCreationTime() {
+        return creationTime;
     }
 
 }
