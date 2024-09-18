@@ -42,6 +42,7 @@ public class ConversationService {
     }
 
     public AnswerModel submitAnswer(String gameId, String playerId, String questionId, String content) {
+        
         AnswerModel answer = new AnswerModel(gameId, playerId, questionId, content);
         answer = answerRepository.save(answer);
         QuestionAnswerModel questionAnswer = new QuestionAnswerModel(questionId, answer.getAnswerId(), gameId);
@@ -119,6 +120,14 @@ public class ConversationService {
 
     public List<AnswerModel> getAllAnswersByGameId(String gameId) {
         return answerRepository.findAllByGameId(gameId);
+    }
+
+    public boolean hasPlayerAnsweredQuestion(String playerId, String questionid) {
+        return answerRepository.hasPlayerAnsweredQuestion(playerId, questionid);
+    }
+
+    public boolean isQuestionAssignedToPlayer(String playerId, String questionId) {
+        return questionAssignmentRepository.isQuestionAssignedToPlayer(playerId, questionId);
     }
 
 }

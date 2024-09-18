@@ -6,9 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.brettstine.social_game_backend.model.AnswerModel;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.PlayerModel;
+import com.brettstine.social_game_backend.model.QuestionAssignmentModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
 
 @Service
@@ -43,6 +45,35 @@ public class GameFlowService {
 
     public void validateQuestion(String questionId) {
         conversationService.getQuestionById(questionId);
+    }
+
+    public void validateQuestionCanReceiveAnswer(String questionId) {
+        if (conversationService.hasTwoAnswers(questionId)) {
+            throw new IllegalStateException("Each question can only recieve two answers");
+        }
+    }
+
+    public void validatePlayerCanSubmitQuestion(String playerId) {
+        if (conversationService.hasSubmittedQuestion(playerId)) {
+            throw new IllegalStateException("Only one question per player can be submitted");
+        }
+    }
+
+    public void validatePlayerCanAnswerThisQuestion(String playerId, String questionId) {
+        validatePlayerWasAssignedThisQuestion(playerId, questionId);
+        validatePlayerHasNotAlreadyAnsweredQuestion(playerId, questionId);
+    }
+
+    public void validatePlayerWasAssignedThisQuestion(String playerId, String questionId) {
+        if (!conversationService.isQuestionAssignedToPlayer(playerId, questionId)) {
+            throw new IllegalArgumentException("The player was not assigned the specified question.");
+        }
+    }
+
+    public void validatePlayerHasNotAlreadyAnsweredQuestion(String playerId, String questionId) {
+        if (conversationService.hasPlayerAnsweredQuestion(playerId, questionId)) {
+            throw new IllegalArgumentException("The player has already submitted an answer to this question");
+        }
     }
 
     public void ensureGameState(String gameId, GameState requiredState) {

@@ -139,6 +139,7 @@ public class ConversationController {
             gameFlowService.ensureGameState(gameId, GameState.QUESTION);
             gameFlowService.validateGame(gameId);
             gameFlowService.validatePlayer(playerId, gameId);
+            gameFlowService.validatePlayerCanSubmitQuestion(playerId);
             QuestionModel question = conversationService.submitQuestion(gameId, playerId, questionContent);
             logger.info("Game: {} : Successfully submitted question with id: {}", gameId, question.getQuestionId());
             gameFlowService.tryAdvanceGameState(gameId);
@@ -184,6 +185,7 @@ public class ConversationController {
             gameFlowService.validateGame(gameId);
             gameFlowService.validatePlayer(playerId, gameId);
             gameFlowService.validateQuestion(questionId);
+            gameFlowService.validatePlayerCanAnswerThisQuestion(playerId, questionId);
             AnswerModel answer = conversationService.submitAnswer(gameId, playerId, questionId, answerContent);
             logger.info("Game: {} : Successfully submitted answer with id: {}", gameId, answer.getAnswerId());
             gameFlowService.tryAdvanceGameState(gameId);
