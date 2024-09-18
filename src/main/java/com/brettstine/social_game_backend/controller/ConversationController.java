@@ -138,7 +138,7 @@ public class ConversationController {
         try {
             gameFlowService.ensureGameState(gameId, GameState.QUESTION);
             gameFlowService.validateGame(gameId);
-            gameFlowService.validatePlayer(playerId);
+            gameFlowService.validatePlayer(playerId, gameId);
             QuestionModel question = conversationService.submitQuestion(gameId, playerId, questionContent);
             logger.info("Game: {} : Successfully submitted question with id: {}", gameId, question.getQuestionId());
             gameFlowService.tryAdvanceGameState(gameId);
@@ -158,7 +158,7 @@ public class ConversationController {
     public ResponseEntity<?> getQuestionsForPlayer(HttpServletRequest request) {
         String playerId = CookieUtil.getDataFromCookie(request, "playerId");
         try {
-            gameFlowService.validatePlayer(playerId);
+            gameFlowService.validatePlayerExists(playerId);
             List<QuestionModel> questions = conversationService.getQuestionsForPlayer(playerId);
             logger.info("Successfully retrieved questions for player with id: {}", playerId);
             return ResponseEntity.ok(questions);
@@ -182,7 +182,7 @@ public class ConversationController {
         try {
             gameFlowService.ensureGameState(gameId, GameState.ANSWER);
             gameFlowService.validateGame(gameId);
-            gameFlowService.validatePlayer(playerId);
+            gameFlowService.validatePlayer(playerId, gameId);
             gameFlowService.validateQuestion(questionId);
             AnswerModel answer = conversationService.submitAnswer(gameId, playerId, questionId, answerContent);
             logger.info("Game: {} : Successfully submitted answer with id: {}", gameId, answer.getAnswerId());

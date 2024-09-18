@@ -30,8 +30,15 @@ public class GameFlowService {
         gameService.getGame(gameId);  // Validate game exists
     }
 
-    public void validatePlayer(String playerId) {
+    public void validatePlayerExists(String playerId) {
         playerService.getPlayer(playerId);
+    }
+
+    public void validatePlayer(String playerId, String gameId) {
+        PlayerModel player = playerService.getPlayer(playerId);
+        if (!player.getGameId().equals(gameId)) {
+            throw new IllegalArgumentException("Incorrect gameId for this player. Expected:"+ player.getGameId() + ", Specified:" + gameId);
+        }
     }
 
     public void validateQuestion(String questionId) {
