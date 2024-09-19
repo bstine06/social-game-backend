@@ -6,10 +6,11 @@ import org.springframework.stereotype.Service;
 import com.brettstine.social_game_backend.controller.ConversationController;
 import com.brettstine.social_game_backend.repository.AnswerRepository;
 import com.brettstine.social_game_backend.repository.GameRepository;
+import com.brettstine.social_game_backend.repository.PlayerAnswerVoteRepository;
 import com.brettstine.social_game_backend.repository.PlayerRepository;
-import com.brettstine.social_game_backend.repository.QuestionAnswerRepository;
 import com.brettstine.social_game_backend.repository.QuestionAssignmentRepository;
 import com.brettstine.social_game_backend.repository.QuestionRepository;
+import com.brettstine.social_game_backend.model.GameModel;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,19 +28,19 @@ public class CleanupService {
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
     private final QuestionAssignmentRepository questionAssignmentRepository;
-    private final QuestionAnswerRepository questionAnswerRepository;
+    private final PlayerAnswerVoteRepository playerAnswerVoteRepository;
 
     public CleanupService(GameRepository gameRepository, PlayerRepository playerRepository,
             QuestionRepository questionRepository,
             AnswerRepository answerRepository,
             QuestionAssignmentRepository questionAssignmentRepository,
-            QuestionAnswerRepository questionAnswerRepository) {
+            PlayerAnswerVoteRepository playerAnswerVoteRepository) {
         this.gameRepository = gameRepository;
         this.playerRepository = playerRepository;
         this.questionRepository = questionRepository;
         this.answerRepository = answerRepository;
         this.questionAssignmentRepository = questionAssignmentRepository;
-        this.questionAnswerRepository = questionAnswerRepository;
+        this.playerAnswerVoteRepository = playerAnswerVoteRepository;
     }
 
     // Runs every hour (can adjust the cron expression if needed)
@@ -51,19 +52,24 @@ public class CleanupService {
         //LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(2); // Delete everything older than 2 minutes. Use only for debugging
         try {
             // Get the IDs of games to be deleted
-            List<String> oldGameIds = gameRepository.findOldGameIds(cutoffTime);
+            List<GameModel> oldGames = gameRepository.findOldGames(cutoffTime);
 
-            if (!oldGameIds.isEmpty()) {
+            if (!oldGames.isEmpty()) {
                 // Perform the deletion
                 int deletedGames = gameRepository.deleteOldGames(cutoffTime);
                 logger.info("Clean up: deleted {} old games", deletedGames);
 
                 // Delete associated records
-                playerRepository.deleteByGameIds(oldGameIds);
-                questionRepository.deleteByGameIds(oldGameIds);
-                answerRepository.deleteByGameIds(oldGameIds);
-                questionAssignmentRepository.deleteByGameIds(oldGameIds);
-                questionAnswerRepository.deleteByGameIds(oldGameIds);
+                playerRepository.deleteByGames(oldGames);
+                questionRepository.deleteByGames(oldGames);
+                answerRepository.deleteByGames(oldGames);
+                questionAssignmentRepository.deleteByGames(oldGames);
+                playerAnswerVoteRepository.deleteByGames(oldGames);
+
+                // Extract game IDs for logging
+                List<String> oldGameIds = oldGames.stream()
+                        .map(GameModel::getGameId)
+                        .toList();
                 
                 logger.info("Clean up: deleted associated records for games with IDs: {}", oldGameIds);
             } else {

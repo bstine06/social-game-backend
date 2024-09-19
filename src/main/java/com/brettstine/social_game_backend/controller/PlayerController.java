@@ -1,9 +1,12 @@
 package com.brettstine.social_game_backend.controller;
 
 import com.brettstine.social_game_backend.model.GameState;
+import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
+import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.PlayerService;
+import com.brettstine.social_game_backend.service.ValidationService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
 import jakarta.servlet.http.Cookie;
@@ -34,22 +37,26 @@ public class PlayerController {
 
     private final PlayerService playerService;
     private final GameFlowService gameFlowService;
+    private final FetchService fetchService;
+    private final ValidationService validationService;
 
-    public PlayerController(PlayerService playerService, GameFlowService gameFlowService) {
+    public PlayerController(PlayerService playerService, GameFlowService gameFlowService, FetchService fetchService, ValidationService validationService) {
         this.playerService = playerService;
         this.gameFlowService = gameFlowService;
+        this.fetchService = fetchService;
+        this.validationService = validationService;
     }
 
-    @PostMapping("/create-player")
-    public ResponseEntity<?> createPlayer(HttpServletResponse response, @RequestBody Map<String, String> payload) {
+    @PostMapping("/create-player-and-add-to-game")
+    public ResponseEntity<?> createPlayerAndAddToGame(HttpServletResponse response, @RequestBody Map<String, String> payload) {
         String name = payload.get("name");
         String gameId = payload.get("gameId");
 
         try {
-            gameFlowService.validateGame(gameId);
-            gameFlowService.ensureGameState(gameId, GameState.LOBBY);
+            GameModel game = fetchService.getGameById(gameId);
+            validationService.ensureGameState(game, GameState.LOBBY);
 
-            PlayerModel player = playerService.createPlayer(gameId, name);
+            PlayerModel player = playerService.createPlayer(game, name);
             String playerId = player.getPlayerId();
             logger.info("Game: {} : Player created with ID: {}, name: {}", gameId, playerId, name);
 
@@ -78,7 +85,7 @@ public class PlayerController {
     public ResponseEntity<?> getPlayer(HttpServletRequest request) {
         String playerId = CookieUtil.getDataFromCookie(request, "playerId");
         try {
-            PlayerModel player = playerService.getPlayer(playerId);
+            PlayerModel player = playerService.getPlayerById(playerId);
             logger.info("Successfully retrieved player with id: {}", playerId);
             return ResponseEntity.ok(player);
         } catch (IllegalArgumentException e) {
@@ -111,8 +118,8 @@ public class PlayerController {
     public ResponseEntity<?> getAllPlayersInGame(@RequestBody Map<String, String> payload) {
         String gameId = payload.get("gameId");
         try {
-            gameFlowService.validateGame(gameId);
-            List<PlayerModel> allPlayers = playerService.getAllPlayersByGameId(gameId);
+            GameModel game = fetchService.getGameById(gameId);
+            List<PlayerModel> allPlayers = game.getPlayers();
             logger.info("Game: {} : Successfully retrieved all players", gameId);
             return ResponseEntity.ok(allPlayers);
         } catch (IllegalArgumentException e) {

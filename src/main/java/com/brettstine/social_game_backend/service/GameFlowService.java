@@ -28,105 +28,50 @@ public class GameFlowService {
         this.conversationService = conversationService;
     }
 
-    public void validateGame(String gameId) {
-        gameService.getGame(gameId);  // Validate game exists
-    }
-
-    public void validatePlayerExists(String playerId) {
-        playerService.getPlayer(playerId);
-    }
-
-    public void validatePlayer(String playerId, String gameId) {
-        PlayerModel player = playerService.getPlayer(playerId);
-        if (!player.getGameId().equals(gameId)) {
-            throw new IllegalArgumentException("Incorrect gameId for this player. Expected:"+ player.getGameId() + ", Specified:" + gameId);
-        }
-    }
-
-    public void validateQuestion(String questionId) {
-        conversationService.getQuestionById(questionId);
-    }
-
-    public void validateQuestionCanReceiveAnswer(String questionId) {
-        if (conversationService.hasTwoAnswers(questionId)) {
-            throw new IllegalStateException("Each question can only recieve two answers");
-        }
-    }
-
-    public void validatePlayerCanSubmitQuestion(String playerId) {
-        if (conversationService.hasSubmittedQuestion(playerId)) {
-            throw new IllegalStateException("Only one question per player can be submitted");
-        }
-    }
-
-    public void validatePlayerCanAnswerThisQuestion(String playerId, String questionId) {
-        validatePlayerWasAssignedThisQuestion(playerId, questionId);
-        validatePlayerHasNotAlreadyAnsweredQuestion(playerId, questionId);
-    }
-
-    public void validatePlayerWasAssignedThisQuestion(String playerId, String questionId) {
-        if (!conversationService.isQuestionAssignedToPlayer(playerId, questionId)) {
-            throw new IllegalArgumentException("The player was not assigned the specified question.");
-        }
-    }
-
-    public void validatePlayerHasNotAlreadyAnsweredQuestion(String playerId, String questionId) {
-        if (conversationService.hasPlayerAnsweredQuestion(playerId, questionId)) {
-            throw new IllegalArgumentException("The player has already submitted an answer to this question");
-        }
-    }
-
-    public void ensureGameState(String gameId, GameState requiredState) {
-        if (!gameService.confirmGameState(gameId, requiredState)) {
-            throw new IllegalStateException("Invalid game state: Game must be in " + requiredState + " state");
-        }
-    }
-
     // New method to ensure at least 3 players exist before advancing from LOBBY to QUESTION
-    public void checkMinimumPlayersForQuestionState(String gameId) {
-        List<PlayerModel> players = playerService.getAllPlayersByGameId(gameId);
+    public void checkMinimumPlayersForQuestionState(GameModel game) {
+        List<PlayerModel> players = playerService.getAllPlayersByGame(game);
         if (players.size() < 3) {
             throw new IllegalStateException("At least 3 players are required to start the game");
         }
     }
 
     // method to advance game state only when certain conditions are met
-    public void tryAdvanceGameState(String gameId) {
-        GameModel game = gameService.getGame(gameId);
+    public void tryAdvanceGameState(GameModel game) {
 
         if (game.getGameState() == GameState.LOBBY) {
-            checkMinimumPlayersForQuestionState(gameId);  // Ensure there are enough players before transitioning
-            gameService.setGameState(gameId, GameState.QUESTION);
-            logger.info("Game: {} : Advanced gameState to: {}", gameId, game.getGameState());
+            checkMinimumPlayersForQuestionState(game);  // Ensure there are enough players before transitioning
+            gameService.setGameState(game, GameState.QUESTION);
+            logger.info("Game: {} : Advanced gameState to: {}", game.getGameId(), game.getGameState());
         } else 
         if (game.getGameState() == GameState.QUESTION) {
             // If all players have submitted their questions, advance to the ANSWER phase
-            List<PlayerModel> players = playerService.getAllPlayersByGameId(gameId);
+            List<PlayerModel> players = playerService.getAllPlayersByGame(game);
             boolean allPlayersSubmittedQuestions = players.stream()
-                .allMatch(player -> conversationService.hasSubmittedQuestion(player.getPlayerId()));
+                .allMatch(player -> conversationService.hasSubmittedQuestion(player));
             if (allPlayersSubmittedQuestions) {
-                gameService.setGameState(gameId, GameState.ASSIGN);
-                logger.info("Game: {} : All players submitted questions, advanced gameState to: {}", gameId, game.getGameState());
-                assignQuestionsToPlayers(gameId);
-                logger.info("Game: {} : Successfully assigned questions", gameId);
-                gameService.setGameState(gameId, GameState.ANSWER);
-                logger.info("Game: {} : Advanced gameState to : {}", gameId, game.getGameState());
+                gameService.setGameState(game, GameState.ASSIGN);
+                logger.info("Game: {} : All players submitted questions, advanced gameState to: {}", game.getGameId(), game.getGameState());
+                assignQuestionsToPlayers(game);
+                logger.info("Game: {} : Successfully assigned questions", game.getGameId());
+                gameService.setGameState(game, GameState.ANSWER);
+                logger.info("Game: {} : Advanced gameState to : {}", game.getGameId(), game.getGameState());
             }
         } else 
         if (game.getGameState() == GameState.ANSWER) {
             // If all questions have recieved two answers, advance to the VOTE phase
-            List<QuestionModel> questions = conversationService.getAllQuestionsByGameId(gameId);
+            List<QuestionModel> questions = conversationService.getAllQuestionsByGame(game);
             boolean allQuestionsHaveTwoAnswers = questions.stream()
-                .allMatch(question -> conversationService.hasTwoAnswers(question.getQuestionId()));
+                .allMatch(question -> conversationService.hasTwoAnswers(question));
             if (allQuestionsHaveTwoAnswers) {
-                gameService.setGameState(gameId, GameState.VOTE);
-                logger.info("Game: {} : All questions received two answers, advanced gameState to : {}", gameId, game.getGameState());
+                gameService.setGameState(game, GameState.VOTE);
+                logger.info("Game: {} : All questions received two answers, advanced gameState to : {}", game.getGameId(), game.getGameState());
             }
         }
     }
 
-    public void assignQuestionsToPlayers(String gameId) {
-        List<PlayerModel> players = playerService.getAllPlayersByGameId(gameId); // Fetch all players by gameId
+    public void assignQuestionsToPlayers(GameModel game) {
+        List<PlayerModel> players = playerService.getAllPlayersByGame(game);
         int numPlayers = players.size();
     
         if (numPlayers < 3) {
@@ -140,12 +85,12 @@ public class GameFlowService {
             // Assign the next 2 players' questions to the current player
             PlayerModel nextPlayer1 = players.get((i + 1) % numPlayers); // Next player in the list
             PlayerModel nextPlayer2 = players.get((i + 2) % numPlayers); // Player after the next
-            QuestionModel nextPlayer1Question = conversationService.getQuestionByPlayerId(nextPlayer1.getPlayerId());
-            QuestionModel nextPlayer2Question = conversationService.getQuestionByPlayerId(nextPlayer2.getPlayerId());
+            QuestionModel nextPlayer1Question = conversationService.getQuestionByPlayer(nextPlayer1);
+            QuestionModel nextPlayer2Question = conversationService.getQuestionByPlayer(nextPlayer2);
     
             // Add both questions to the current player
-            conversationService.addQuestionForPlayer(gameId, currentPlayer.getPlayerId(), nextPlayer1Question.getQuestionId());
-            conversationService.addQuestionForPlayer(gameId, currentPlayer.getPlayerId(), nextPlayer2Question.getQuestionId());
+            conversationService.addQuestionForPlayer(game, currentPlayer, nextPlayer1Question);
+            conversationService.addQuestionForPlayer(game, currentPlayer, nextPlayer2Question);
         }
     }
     

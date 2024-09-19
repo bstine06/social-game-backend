@@ -1,10 +1,15 @@
 package com.brettstine.social_game_backend.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -19,7 +24,19 @@ public class GameModel {
     private GameState gameState;
 
     @Column(name = "creation_time", nullable = false)
+    @JsonIgnore
     private LocalDateTime creationTime;
+
+    @OneToMany(mappedBy = "game", fetch = FetchType.LAZY)
+    private List<PlayerModel> players;
+
+    @OneToMany(mappedBy = "game", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<QuestionAssignmentModel> questionAssignments;
+
+    @OneToMany(mappedBy = "game", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<PlayerAnswerVoteModel> playerAnswerVotes;
 
     public GameModel() {
     }
@@ -48,5 +65,34 @@ public class GameModel {
 
     public LocalDateTime getCreationTime() {
         return creationTime;
+    }
+
+    public List<PlayerModel> getPlayers() {
+        return players;
+    }
+
+    public void setPlayers(List<PlayerModel> players) {
+        this.players = players;
+    }
+
+    public void addPlayer(PlayerModel player) {
+        player.setGame(this);
+        this.players.add(player);
+    }
+
+    public List<QuestionAssignmentModel> getQuestionAssignments() {
+        return questionAssignments;
+    }
+
+    public void setQuestionAssignments(List<QuestionAssignmentModel> questionAssignments) {
+        this.questionAssignments = questionAssignments;
+    }
+
+    public List<PlayerAnswerVoteModel> getPlayerAnswerVotes() {
+        return playerAnswerVotes;
+    }
+
+    public void setPlayerAnswerVotes(List<PlayerAnswerVoteModel> playerAnswerVotes) {
+        this.playerAnswerVotes = playerAnswerVotes;
     }
 }

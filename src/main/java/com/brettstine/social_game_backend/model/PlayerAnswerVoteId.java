@@ -3,17 +3,17 @@ package com.brettstine.social_game_backend.model;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class QuestionAssignmentId implements Serializable {
-    private String question;
+public class PlayerAnswerVoteId implements Serializable {
     private String player;
+    private String answer;
 
     // Default constructor
-    public QuestionAssignmentId() {
+    public PlayerAnswerVoteId() {
     }
 
-    public QuestionAssignmentId(String question, String player) {
+    public PlayerAnswerVoteId(String player, String answer) {
         this.player = player;
-        this.question = question;
+        this.answer = answer;
     }
 
     public String getPlayer() {
@@ -24,25 +24,25 @@ public class QuestionAssignmentId implements Serializable {
         this.player = player;
     }
 
-    public String getQuestion() {
-        return question;
+    public String getAnswer() {
+        return answer;
     }
 
-    public void setQuestion(String question) {
-        this.question = question;
+    public void setAnswer(String answer) {
+        this.answer = answer;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        QuestionAssignmentId that = (QuestionAssignmentId) o;
+        PlayerAnswerVoteId that = (PlayerAnswerVoteId) o;
         return player.equals(that.player) &&
-               question.equals(that.question);
+               answer.equals(that.answer);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(player, question);
+        return Objects.hash(player, answer);
     }
 }

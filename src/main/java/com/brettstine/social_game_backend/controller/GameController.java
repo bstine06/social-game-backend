@@ -73,7 +73,8 @@ public class GameController {
     public ResponseEntity<?> getState(@RequestBody Map<String, String> payload) {
         String gameId = payload.get("gameId");
         try {
-            GameState gameState = gameService.getGameState(gameId);
+            GameModel game = gameService.getGameById(gameId);
+            GameState gameState = gameService.getGameState(game);
             logger.info("Game: {} : Successfully executed getState", gameId);
             return ResponseEntity.ok(Map.of("gameState", gameState));
         } catch (IllegalArgumentException e) {
@@ -91,8 +92,8 @@ public class GameController {
     public ResponseEntity<?> advanceState(@RequestBody Map<String, String> payload) {
         String gameId = payload.get("gameId");
         try {
-            gameFlowService.tryAdvanceGameState(gameId);
-            GameModel game = gameService.getGame(gameId);
+            GameModel game = gameService.getGameById(gameId);
+            gameFlowService.tryAdvanceGameState(game);
             // log successful game state advancement inside of gameFlowService
             return ResponseEntity.ok(game);
         } catch (IllegalArgumentException e) {
@@ -111,8 +112,9 @@ public class GameController {
         String gameId = payload.get("gameId");
         String gameState = payload.get("gameState");
         try {
-            gameFlowService.checkMinimumPlayersForQuestionState(gameId);
-            GameModel updatedGame = gameService.setGameState(gameId, GameState.fromString(gameState));
+            GameModel game = gameService.getGameById(gameId);
+            gameFlowService.checkMinimumPlayersForQuestionState(game);
+            GameModel updatedGame = gameService.setGameState(game, GameState.fromString(gameState));
             logger.info("Game: {} : Successfully updated gameState to {}", gameId, gameState);
             return ResponseEntity.ok(updatedGame);
         } catch (IllegalArgumentException e) {

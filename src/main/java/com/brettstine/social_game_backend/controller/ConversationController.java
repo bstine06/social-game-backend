@@ -14,10 +14,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.brettstine.social_game_backend.model.AnswerModel;
+import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.GameState;
+import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
 import com.brettstine.social_game_backend.service.ConversationService;
+import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.service.GameFlowService;
+import com.brettstine.social_game_backend.service.ValidationService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,10 +38,14 @@ public class ConversationController {
 
     private final ConversationService conversationService;
     private final GameFlowService gameFlowService;
+    private final FetchService fetchService;
+    private final ValidationService validationService;
 
-    public ConversationController(ConversationService conversationService, GameFlowService gameFlowService) {
+    public ConversationController(ConversationService conversationService, GameFlowService gameFlowService, FetchService fetchService, ValidationService validationService) {
         this.conversationService = conversationService;
         this.gameFlowService = gameFlowService;
+        this.fetchService = fetchService;
+        this.validationService = validationService;
     }
 
     @GetMapping("/get-question")
@@ -116,7 +124,8 @@ public class ConversationController {
     public ResponseEntity<?> getAnswersForQuestion(@RequestBody Map<String, String> payload) {
         String questionId = payload.get("questionId");
         try {
-            List<AnswerModel> answers = conversationService.getAnswersForQuestion(questionId);
+            QuestionModel question = fetchService.getQuestionById(questionId);
+            List<AnswerModel> answers = conversationService.getAnswersForQuestion(question);
             logger.info("Successfully retrieved answers for question with id: {}", questionId);
             return ResponseEntity.ok(answers);
         } catch (IllegalArgumentException e) {
@@ -136,13 +145,13 @@ public class ConversationController {
         String questionContent = payload.get("question");
         String playerId = CookieUtil.getDataFromCookie(request, "playerId");
         try {
-            gameFlowService.ensureGameState(gameId, GameState.QUESTION);
-            gameFlowService.validateGame(gameId);
-            gameFlowService.validatePlayer(playerId, gameId);
-            gameFlowService.validatePlayerCanSubmitQuestion(playerId);
-            QuestionModel question = conversationService.submitQuestion(gameId, playerId, questionContent);
+            GameModel game = fetchService.getGameById(gameId);
+            PlayerModel player = fetchService.getPlayerById(playerId);
+            validationService.ensureGameState(game, GameState.QUESTION);
+            validationService.validatePlayerCanSubmitQuestion(player);
+            QuestionModel question = conversationService.submitQuestion(game, player, questionContent);
             logger.info("Game: {} : Successfully submitted question with id: {}", gameId, question.getQuestionId());
-            gameFlowService.tryAdvanceGameState(gameId);
+            gameFlowService.tryAdvanceGameState(game);
             return ResponseEntity.ok(question);
         } catch (IllegalArgumentException e) {
             logger.error("Game: {} : Error submitting question", gameId, e);
@@ -159,8 +168,8 @@ public class ConversationController {
     public ResponseEntity<?> getQuestionsForPlayer(HttpServletRequest request) {
         String playerId = CookieUtil.getDataFromCookie(request, "playerId");
         try {
-            gameFlowService.validatePlayerExists(playerId);
-            List<QuestionModel> questions = conversationService.getQuestionsForPlayer(playerId);
+            PlayerModel player = fetchService.getPlayerById(playerId);
+            List<QuestionModel> questions = conversationService.getQuestionsForPlayer(player);
             logger.info("Successfully retrieved questions for player with id: {}", playerId);
             return ResponseEntity.ok(questions);
         } catch (IllegalArgumentException e) {
@@ -181,14 +190,15 @@ public class ConversationController {
         String answerContent = payload.get("answer");
         String playerId = CookieUtil.getDataFromCookie(request, "playerId");
         try {
-            gameFlowService.ensureGameState(gameId, GameState.ANSWER);
-            gameFlowService.validateGame(gameId);
-            gameFlowService.validatePlayer(playerId, gameId);
-            gameFlowService.validateQuestion(questionId);
-            gameFlowService.validatePlayerCanAnswerThisQuestion(playerId, questionId);
-            AnswerModel answer = conversationService.submitAnswer(gameId, playerId, questionId, answerContent);
+            GameModel game = fetchService.getGameById(gameId);
+            PlayerModel player = fetchService.getPlayerById(playerId);
+            QuestionModel question = fetchService.getQuestionById(questionId);
+            validationService.ensureGameState(game, GameState.ANSWER);
+            validationService.validatePlayer(player, game);
+            validationService.validatePlayerCanAnswerThisQuestion(player, question);
+            AnswerModel answer = conversationService.submitAnswer(game, player, question, answerContent);
             logger.info("Game: {} : Successfully submitted answer with id: {}", gameId, answer.getAnswerId());
-            gameFlowService.tryAdvanceGameState(gameId);
+            gameFlowService.tryAdvanceGameState(game);
             return ResponseEntity.ok(answer);
         } catch (IllegalArgumentException e) {
             logger.error("Game: {} : Error submitting answer", gameId, e);

@@ -18,7 +18,7 @@ public interface GameRepository extends JpaRepository<GameModel, String> {
     @Query("DELETE FROM GameModel g WHERE g.creationTime < :cutoffTime")
     int deleteOldGames(@Param("cutoffTime") LocalDateTime cutoffTime);
 
-    @Query("SELECT g.gameId FROM GameModel g WHERE g.creationTime < :cutoffTime")
-    List<String> findOldGameIds(@Param("cutoffTime") LocalDateTime cutoffTime);
-    
+    @Query("SELECT g FROM GameModel g WHERE g.creationTime < :cutoffTime")
+    List<GameModel> findOldGames(@Param("cutoffTime") LocalDateTime cutoffTime);
 }
+

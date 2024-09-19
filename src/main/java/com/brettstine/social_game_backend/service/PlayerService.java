@@ -1,5 +1,6 @@
 package com.brettstine.social_game_backend.service;
 
+import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.repository.PlayerRepository;
 
@@ -16,16 +17,16 @@ public class PlayerService {
         this.playerRepository = playerRepository;
     }
 
-    public PlayerModel createPlayer(String gameId, String name) {
-        PlayerModel player = new PlayerModel(gameId, name);
+    public PlayerModel createPlayer(GameModel game, String name) {
+        PlayerModel player = new PlayerModel(game, name);
         return playerRepository.save(player);
     }
 
-    public PlayerModel getPlayer(String playerId) {
+    public PlayerModel getPlayerById(String playerId) {
         return playerRepository.findById(playerId).orElseThrow(() -> new IllegalArgumentException("Player not found with ID: " + playerId));
     }
 
-    public void deletePlayer(String playerId) {
+    public void deletePlayerById(String playerId) {
         if (!playerRepository.existsById(playerId)) {
             throw new IllegalArgumentException("Player not found for ID: " + playerId);
         }
@@ -33,13 +34,13 @@ public class PlayerService {
     }
 
     public PlayerModel setName(String playerId, String name) {
-        PlayerModel player = getPlayer(playerId);
+        PlayerModel player = getPlayerById(playerId);
         player.setName(name);
         return playerRepository.save(player);
     }
 
-    public List<PlayerModel> getAllPlayersByGameId(String gameId) {
-        return playerRepository.findByGameId(gameId);
+    public List<PlayerModel> getAllPlayersByGame(GameModel game) {
+        return playerRepository.findByGame(game);
     }
 
     public List<PlayerModel> getAllPlayers() {

@@ -44,22 +44,21 @@ public class GameService {
         gameRepository.deleteById(gameId);
     }
 
-    public GameModel getGame(String gameId) {
+    public GameModel getGameById(String gameId) {
         return gameRepository.findById(gameId).orElseThrow(() -> new IllegalArgumentException("Game not found with ID: " + gameId));
     }
 
-    public GameModel setGameState(String gameId, GameState gameState) {
-        GameModel game = getGame(gameId);
+    public GameModel setGameState(GameModel game, GameState gameState) {
         game.setGameState(gameState);
         return gameRepository.save(game);
     }
 
-    public GameState getGameState(String gameId) {
-        return getGame(gameId).getGameState();
+    public GameState getGameState(GameModel game) {
+        return game.getGameState();
     }
 
-    public boolean confirmGameState(String gameId, GameState expectedGameState) {
-        GameState actualGameState = getGame(gameId).getGameState();
+    public boolean confirmGameState(GameModel game, GameState expectedGameState) {
+        GameState actualGameState = game.getGameState();
         return (expectedGameState == actualGameState);
     }
 

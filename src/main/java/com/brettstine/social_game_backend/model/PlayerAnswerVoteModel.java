@@ -15,54 +15,53 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "question_assignment")
-@IdClass(QuestionAssignmentId.class)
-public class QuestionAssignmentModel {
-
-    @Id
-    @ManyToOne
-    @JoinColumn(name = "question_id", nullable = false)
-    private QuestionModel question;
+@Table(name = "player_answer_vote")
+@IdClass(PlayerAnswerVoteId.class)
+public class PlayerAnswerVoteModel {
 
     @Id
     @ManyToOne
     @JoinColumn(name = "player_id", nullable = false)
     private PlayerModel player;
 
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "answer_id", nullable = false)
+    private AnswerModel answer;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", nullable = false)
-    @JsonIgnore
     private GameModel game;
 
     @Column(name = "creation_time", nullable = false)
     @JsonIgnore
     private LocalDateTime creationTime;
 
-    public QuestionAssignmentModel() {
+    public PlayerAnswerVoteModel() {
     }
 
-    public QuestionAssignmentModel(QuestionModel question, PlayerModel player, GameModel game) {
-        this.question = question;
+    public PlayerAnswerVoteModel(PlayerModel player, AnswerModel answer, GameModel game) {
         this.player = player;
+        this.answer = answer;
         this.game = game;
         this.creationTime = LocalDateTime.now();
     }
 
     // Getters and Setters
-    public QuestionModel getQuestion() {
-        return question;
-    }
-
-    public void setQuestion(QuestionModel question) {
-        this.question = question;
-    }
-
     public PlayerModel getPlayer() {
         return player;
     }
 
     public void setPlayer(PlayerModel player) {
         this.player = player;
+    }
+
+    public AnswerModel getAnswer() {
+        return answer;
+    }
+
+    public void setAnswer(AnswerModel answer) {
+        this.answer = answer;
     }
 
     public GameModel getGame() {
@@ -85,15 +84,16 @@ public class QuestionAssignmentModel {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        QuestionAssignmentModel that = (QuestionAssignmentModel) o;
-        return question.equals(that.question) &&
-               player.equals(that.player) &&
+        PlayerAnswerVoteModel that = (PlayerAnswerVoteModel) o;
+        return player.equals(that.player) &&
+               answer.equals(that.answer) &&
                game.equals(that.game);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(question, player, game);
+        return Objects.hash(player, answer, game);
     }
 }
+
 
