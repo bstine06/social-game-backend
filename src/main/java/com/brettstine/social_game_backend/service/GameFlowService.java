@@ -20,12 +20,14 @@ public class GameFlowService {
 
     private final GameService gameService;
     private final PlayerService playerService;
-    private final ConversationService conversationService;
+    private final QuestionService questionService;
+    private final AnswerService answerService;
 
-    public GameFlowService(GameService gameService, PlayerService playerService, ConversationService conversationService) {
+    public GameFlowService(GameService gameService, PlayerService playerService, QuestionService questionService, AnswerService answerService) {
         this.gameService = gameService;
         this.playerService = playerService;
-        this.conversationService = conversationService;
+        this.questionService = questionService;
+        this.answerService = answerService;
     }
 
     // New method to ensure at least 3 players exist before advancing from LOBBY to QUESTION
@@ -48,7 +50,7 @@ public class GameFlowService {
             // If all players have submitted their questions, advance to the ANSWER phase
             List<PlayerModel> players = playerService.getAllPlayersByGame(game);
             boolean allPlayersSubmittedQuestions = players.stream()
-                .allMatch(player -> conversationService.hasSubmittedQuestion(player));
+                .allMatch(player -> questionService.hasSubmittedQuestion(player));
             if (allPlayersSubmittedQuestions) {
                 gameService.setGameState(game, GameState.ASSIGN);
                 logger.info("Game: {} : All players submitted questions, advanced gameState to: {}", game.getGameId(), game.getGameState());
@@ -60,9 +62,9 @@ public class GameFlowService {
         } else 
         if (game.getGameState() == GameState.ANSWER) {
             // If all questions have recieved two answers, advance to the VOTE phase
-            List<QuestionModel> questions = conversationService.getAllQuestionsByGame(game);
+            List<QuestionModel> questions = questionService.getAllQuestionsByGame(game);
             boolean allQuestionsHaveTwoAnswers = questions.stream()
-                .allMatch(question -> conversationService.hasTwoAnswers(question));
+                .allMatch(question -> answerService.hasTwoAnswers(question));
             if (allQuestionsHaveTwoAnswers) {
                 gameService.setGameState(game, GameState.VOTE);
                 logger.info("Game: {} : All questions received two answers, advanced gameState to : {}", game.getGameId(), game.getGameState());
@@ -85,12 +87,12 @@ public class GameFlowService {
             // Assign the next 2 players' questions to the current player
             PlayerModel nextPlayer1 = players.get((i + 1) % numPlayers); // Next player in the list
             PlayerModel nextPlayer2 = players.get((i + 2) % numPlayers); // Player after the next
-            QuestionModel nextPlayer1Question = conversationService.getQuestionByPlayer(nextPlayer1);
-            QuestionModel nextPlayer2Question = conversationService.getQuestionByPlayer(nextPlayer2);
+            QuestionModel nextPlayer1Question = questionService.getQuestionByPlayer(nextPlayer1);
+            QuestionModel nextPlayer2Question = questionService.getQuestionByPlayer(nextPlayer2);
     
             // Add both questions to the current player
-            conversationService.addQuestionForPlayer(game, currentPlayer, nextPlayer1Question);
-            conversationService.addQuestionForPlayer(game, currentPlayer, nextPlayer2Question);
+            questionService.addQuestionForPlayer(game, currentPlayer, nextPlayer1Question);
+            questionService.addQuestionForPlayer(game, currentPlayer, nextPlayer2Question);
         }
     }
     

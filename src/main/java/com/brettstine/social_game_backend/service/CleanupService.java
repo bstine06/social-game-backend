@@ -4,7 +4,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.brettstine.social_game_backend.controller.ConversationController;
 import com.brettstine.social_game_backend.repository.AnswerRepository;
 import com.brettstine.social_game_backend.repository.GameRepository;
 import com.brettstine.social_game_backend.repository.PlayerAnswerVoteRepository;
@@ -45,13 +44,12 @@ public class CleanupService {
     }
 
     // Runs every hour (can adjust the cron expression if needed)
-    // @Scheduled(cron = "0 0 * * * ?") // Every hour at minute 0
+    @Scheduled(cron = "0 0 * * * ?") // Every hour at minute 0
     @Transactional
-    @Scheduled(cron = "0 */3 * * * ?") // Using only for debugging
     public void cleanUp() {
         logger.info("Performing scheduled clean up:");
-        //LocalDateTime cutoffTime = LocalDateTime.now().minusHours(1); // Delete everything older than 1 hour.
-        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(3); // Use only for debugging
+        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(1); // Delete everything older than 1 hour.
+        // LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(3); // Use only for debugging
         try {
             // Get the IDs of games to be deleted
             List<GameModel> oldGames = gameRepository.findOldGames(cutoffTime);

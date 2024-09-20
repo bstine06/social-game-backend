@@ -15,17 +15,14 @@ import com.brettstine.social_game_backend.repository.QuestionAssignmentRepositor
 import com.brettstine.social_game_backend.repository.QuestionRepository;
 
 @Service
-public class ConversationService {
+public class QuestionService {
 
     private final QuestionRepository questionRepository;
-    private final AnswerRepository answerRepository;
     private final QuestionAssignmentRepository questionAssignmentRepository;
 
-    public ConversationService(AnswerRepository answerRepository,
-            QuestionRepository questionRepository,
+    public QuestionService(QuestionRepository questionRepository,
             QuestionAssignmentRepository questionAssignmentRepository) {
         this.questionRepository = questionRepository;
-        this.answerRepository = answerRepository;
         this.questionAssignmentRepository = questionAssignmentRepository;
     }
 
@@ -38,30 +35,12 @@ public class ConversationService {
         return questionRepository.existsByPlayer(player);
     }
 
-    public AnswerModel submitAnswer(GameModel game, PlayerModel player, QuestionModel question, String content) {
-        AnswerModel answer = new AnswerModel(game, player, question, content);
-        answer = answerRepository.save(answer);
-        return answer;
-    }
-
-    public boolean hasTwoAnswers(QuestionModel question) {
-        return answerRepository.hasQuestionReceivedTwoAnswers(question);
-    }
-
     public void deleteQuestion(String questionId) {
         questionRepository.deleteById(questionId);
     }
 
-    public void deleteAnswer(String answerId) {
-        answerRepository.deleteById(answerId);
-    }
-
     public QuestionModel getQuestionById(String questionId) {
         return questionRepository.findById(questionId).orElseThrow(() -> new IllegalArgumentException("Question not found with ID: " + questionId));
-    }
-
-    public AnswerModel getAnswerById(String answerId) {
-        return answerRepository.findById(answerId).orElseThrow(() -> new IllegalArgumentException("Answer not found with ID: " + answerId));
     }
 
     public QuestionModel getQuestionByPlayer(PlayerModel player) {
@@ -82,29 +61,12 @@ public class ConversationService {
         questionAssignmentRepository.save(questionAssignment);
     }
 
-    public List<AnswerModel> getAnswersForQuestion(QuestionModel question) {
-        List<AnswerModel> answers = answerRepository.findAllByQuestion(question);
-        return answers;
-    }
-
     public List<QuestionModel> getAllQuestions() {
         return questionRepository.findAll();
     }
 
     public List<QuestionModel> getAllQuestionsByGame(GameModel game) {
         return questionRepository.findAllByGame(game);
-    }
-
-    public List<AnswerModel> getAllAnswers() {
-        return answerRepository.findAll();
-    }
-
-    public List<AnswerModel> getAllAnswersByGame(GameModel game) {
-        return answerRepository.findAllByGame(game);
-    }
-
-    public boolean hasPlayerAnsweredQuestion(PlayerModel player, QuestionModel question) {
-        return answerRepository.hasPlayerAnsweredQuestion(player, question);
     }
 
     public boolean isQuestionAssignedToPlayer(PlayerModel player, QuestionModel question) {

@@ -18,7 +18,7 @@ import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
-import com.brettstine.social_game_backend.service.ConversationService;
+import com.brettstine.social_game_backend.service.AnswerService;
 import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.ValidationService;
@@ -31,46 +31,28 @@ import org.slf4j.LoggerFactory;
 
 @RestController
 @CrossOrigin(origins = "${frontend.url}", allowCredentials = "true")
-@RequestMapping("/conversation")
-public class ConversationController {
+@RequestMapping("/answer")
+public class AnswerController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ConversationController.class);
+    private static final Logger logger = LoggerFactory.getLogger(AnswerController.class);
 
-    private final ConversationService conversationService;
+    private final AnswerService answerService;
     private final GameFlowService gameFlowService;
     private final FetchService fetchService;
     private final ValidationService validationService;
 
-    public ConversationController(ConversationService conversationService, GameFlowService gameFlowService, FetchService fetchService, ValidationService validationService) {
-        this.conversationService = conversationService;
+    public AnswerController(AnswerService answerService, GameFlowService gameFlowService, FetchService fetchService, ValidationService validationService) {
+        this.answerService = answerService;
         this.gameFlowService = gameFlowService;
         this.fetchService = fetchService;
         this.validationService = validationService;
-    }
-
-    @GetMapping("/get-question")
-    public ResponseEntity<?> getQuestionFromId(@RequestBody Map<String, String> payload) {
-        String questionId = payload.get("questionId");
-        try {
-            QuestionModel questionModel = conversationService.getQuestionById(questionId);
-            logger.info("Successfully executed getQuestion with id: {}", questionId);
-            return ResponseEntity.ok(questionModel);
-        } catch (IllegalArgumentException e) {
-            logger.error("Error getting question with id: {}", questionId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Could not get question", "message", e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Error getting question with id: {}", questionId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Could not get question", "message", e.getMessage()));
-        }
     }
 
     @GetMapping("/get-answer")
     public ResponseEntity<?> getAnswerFromId(@RequestBody Map<String, String> payload) {
         String answerId = payload.get("answerId");
         try {
-            AnswerModel answerModel = conversationService.getAnswerById(answerId);
+            AnswerModel answerModel = answerService.getAnswerById(answerId);
             logger.info("Successfully executed getAnswer with id: {}", answerId);
             return ResponseEntity.ok(answerModel);
         } catch (IllegalArgumentException e) {
@@ -84,29 +66,11 @@ public class ConversationController {
         }
     }
 
-    @DeleteMapping("/delete-question")
-    public ResponseEntity<?> deleteQuestion(@RequestBody Map<String, String> payload) {
-        String questionId = payload.get("questionId");
-        try {
-            conversationService.deleteQuestion(questionId);
-            logger.info("Successfully deleted question with id: {}", questionId);
-            return ResponseEntity.ok(Map.of("message", "Successfully deleted question", "questionId", questionId));
-        } catch (IllegalArgumentException e) {
-            logger.error("Error deleting question with id: {}", questionId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "could not delete question", "message", e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Error deleting question with id: {}", questionId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "could not delete question", "message", e.getMessage()));
-        }
-    }
-
     @DeleteMapping("/delete-answer")
     public ResponseEntity<?> deleteAnswer(@RequestBody Map<String, String> payload) {
         String answerId = payload.get("answerId");
         try {
-            conversationService.deleteAnswer(answerId);
+            answerService.deleteAnswer(answerId);
             logger.info("Successfully deleted answer with id: {}", answerId);
             return ResponseEntity.ok(Map.of("message", "Successfully deleted answer", "answerId", answerId));
         } catch (IllegalArgumentException e) {
@@ -125,7 +89,7 @@ public class ConversationController {
         String questionId = payload.get("questionId");
         try {
             QuestionModel question = fetchService.getQuestionById(questionId);
-            List<AnswerModel> answers = conversationService.getAnswersForQuestion(question);
+            List<AnswerModel> answers = answerService.getAnswersForQuestion(question);
             logger.info("Successfully retrieved answers for question with id: {}", questionId);
             return ResponseEntity.ok(answers);
         } catch (IllegalArgumentException e) {
@@ -136,50 +100,6 @@ public class ConversationController {
             logger.error("Error retrieving answers for question with id: {}", questionId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "error fetching answers for question", "message", e.getMessage()));
-        }
-    }
-
-    @PostMapping("/submit-question")
-    public ResponseEntity<?> submitQuestion(HttpServletRequest request, @RequestBody Map<String, String> payload) {
-        String gameId = payload.get("gameId");
-        String questionContent = payload.get("question");
-        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
-        try {
-            GameModel game = fetchService.getGameById(gameId);
-            PlayerModel player = fetchService.getPlayerById(playerId);
-            validationService.ensureGameState(game, GameState.QUESTION);
-            validationService.validatePlayerCanSubmitQuestion(player);
-            QuestionModel question = conversationService.submitQuestion(game, player, questionContent);
-            logger.info("Game: {} : Successfully submitted question with id: {}", gameId, question.getQuestionId());
-            gameFlowService.tryAdvanceGameState(game);
-            return ResponseEntity.ok(question);
-        } catch (IllegalArgumentException e) {
-            logger.error("Game: {} : Error submitting question", gameId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "error submitting question", "message", e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Game: {} : Error submitting question", gameId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "error submitting question", "message", e.getMessage()));
-        }
-    }
-
-    @GetMapping("/get-questions-for-player")
-    public ResponseEntity<?> getQuestionsForPlayer(HttpServletRequest request) {
-        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
-        try {
-            PlayerModel player = fetchService.getPlayerById(playerId);
-            List<QuestionModel> questions = conversationService.getQuestionsForPlayer(player);
-            logger.info("Successfully retrieved questions for player with id: {}", playerId);
-            return ResponseEntity.ok(questions);
-        } catch (IllegalArgumentException e) {
-            logger.error("Error retrieving questions for player with id: {}", playerId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "error submitting question", "message", e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Error retrieving questions for player with id: {}", playerId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "error submitting question", "message", e.getMessage()));
         }
     }
 
@@ -196,7 +116,7 @@ public class ConversationController {
             validationService.ensureGameState(game, GameState.ANSWER);
             validationService.validatePlayer(player, game);
             validationService.validatePlayerCanAnswerThisQuestion(player, question);
-            AnswerModel answer = conversationService.submitAnswer(game, player, question, answerContent);
+            AnswerModel answer = answerService.submitAnswer(game, player, question, answerContent);
             logger.info("Game: {} : Successfully submitted answer with id: {}", gameId, answer.getAnswerId());
             gameFlowService.tryAdvanceGameState(game);
             return ResponseEntity.ok(answer);
@@ -211,23 +131,10 @@ public class ConversationController {
         }
     }
 
-    @GetMapping("/get-all-questions")
-    public ResponseEntity<?> getAllQuestionsInGame() {
-        try {
-            List<QuestionModel> questions = conversationService.getAllQuestions();
-            logger.info("Successfully retrieved all questions");
-            return ResponseEntity.ok(questions);
-        } catch (Exception e) {
-            logger.error("Error retrieving all questions", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "error fetching questions", "message", e.getMessage()));
-        }
-    }
-
     @GetMapping("/get-all-answers")
     public ResponseEntity<?> getAllAnswers() {
         try {
-            List<AnswerModel> answers = conversationService.getAllAnswers();
+            List<AnswerModel> answers = answerService.getAllAnswers();
             logger.info("Successfully retrieved all answers");
             return ResponseEntity.ok(answers);
         } catch (Exception e) {

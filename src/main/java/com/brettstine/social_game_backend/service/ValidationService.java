@@ -16,12 +16,14 @@ public class ValidationService {
 
     private final GameService gameService;
     private final PlayerService playerService;
-    private final ConversationService conversationService;
+    private final QuestionService questionService;
+    private final AnswerService answerService;
 
-    public ValidationService(GameService gameService, PlayerService playerService, ConversationService conversationService) {
+    public ValidationService(GameService gameService, PlayerService playerService, QuestionService questionService, AnswerService answerService) {
         this.gameService = gameService;
         this.playerService = playerService;
-        this.conversationService = conversationService;
+        this.questionService = questionService;
+        this.answerService = answerService;
     }
 
     public void validatePlayer(PlayerModel player, GameModel game) {
@@ -31,17 +33,17 @@ public class ValidationService {
     }
 
     public void validateQuestion(String questionId) {
-        conversationService.getQuestionById(questionId);
+        questionService.getQuestionById(questionId);
     }
 
     public void validateQuestionCanReceiveAnswer(QuestionModel question) {
-        if (conversationService.hasTwoAnswers(question)) {
+        if (answerService.hasTwoAnswers(question)) {
             throw new IllegalStateException("Each question can only recieve two answers");
         }
     }
 
     public void validatePlayerCanSubmitQuestion(PlayerModel player) {
-        if (conversationService.hasSubmittedQuestion(player)) {
+        if (questionService.hasSubmittedQuestion(player)) {
             throw new IllegalStateException("Only one question per player can be submitted");
         }
     }
@@ -52,13 +54,13 @@ public class ValidationService {
     }
 
     public void validatePlayerWasAssignedThisQuestion(PlayerModel player, QuestionModel question) {
-        if (!conversationService.isQuestionAssignedToPlayer(player, question)) {
+        if (!questionService.isQuestionAssignedToPlayer(player, question)) {
             throw new IllegalArgumentException("The player was not assigned the specified question.");
         }
     }
 
     public void validatePlayerHasNotAlreadyAnsweredQuestion(PlayerModel player, QuestionModel question) {
-        if (conversationService.hasPlayerAnsweredQuestion(player, question)) {
+        if (answerService.hasPlayerAnsweredQuestion(player, question)) {
             throw new IllegalArgumentException("The player has already submitted an answer to this question");
         }
     }

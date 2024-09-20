@@ -13,12 +13,14 @@ public class FetchService {
 
     private final GameService gameService;
     private final PlayerService playerService;
-    private final ConversationService conversationService;
+    private final QuestionService questionService;
+    private final AnswerService answerService;
 
-    public FetchService(GameService gameService, PlayerService playerService, ConversationService conversationService) {
+    public FetchService(GameService gameService, PlayerService playerService, QuestionService questionService, AnswerService answerService) {
         this.gameService = gameService;
         this.playerService = playerService;
-        this.conversationService = conversationService;
+        this.questionService = questionService;
+        this.answerService = answerService;
     }
 
     public GameModel getGameById(String gameId) {
@@ -30,11 +32,11 @@ public class FetchService {
     }
 
     public QuestionModel getQuestionById(String questionId) {
-        return conversationService.getQuestionById(questionId);
+        return questionService.getQuestionById(questionId);
     }
 
     public AnswerModel getAnswerById(String answerId) {
-        return conversationService.getAnswerById(answerId);
+        return answerService.getAnswerById(answerId);
     }
 }
 
