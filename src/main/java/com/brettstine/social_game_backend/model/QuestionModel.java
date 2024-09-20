@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -63,6 +64,11 @@ public class QuestionModel {
 
     public GameModel getGame() {
         return game;
+    }
+
+    @JsonProperty("gameId")
+    public String getGameId() {
+        return game != null ? game.getGameId() : null;  // Only return the gameId
     }
 
     public PlayerModel getPlayer() {

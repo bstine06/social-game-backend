@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -50,6 +52,11 @@ public class PlayerModel {
 
     public void setGame(GameModel game) {
         this.game = game;
+    }
+
+    @JsonProperty("gameId")
+    public String getGameId() {
+        return game != null ? game.getGameId() : null;  // Only return the gameId
     }
 
     public String getPlayerId() {

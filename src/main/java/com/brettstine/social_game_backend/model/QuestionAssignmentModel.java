@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -67,6 +68,11 @@ public class QuestionAssignmentModel {
 
     public GameModel getGame() {
         return game;
+    }
+
+    @JsonProperty("gameId")
+    public String getGameId() {
+        return game != null ? game.getGameId() : null;  // Only return the gameId
     }
 
     public void setGame(GameModel game) {
