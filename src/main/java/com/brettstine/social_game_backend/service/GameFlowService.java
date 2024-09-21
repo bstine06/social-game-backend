@@ -30,6 +30,14 @@ public class GameFlowService {
         this.answerService = answerService;
     }
 
+    // method to ensure no more than 10 players are added to a game
+    public void checkMaximumPlayersForGame(GameModel game) {
+        List<PlayerModel> players = playerService.getAllPlayersByGame(game);
+        if (players.size() >= 10) {
+            throw new IllegalStateException("No more than 10 players can be added to a game");
+        }
+    }
+
     // New method to ensure at least 3 players exist before advancing from LOBBY to QUESTION
     public void checkMinimumPlayersForQuestionState(GameModel game) {
         List<PlayerModel> players = playerService.getAllPlayersByGame(game);

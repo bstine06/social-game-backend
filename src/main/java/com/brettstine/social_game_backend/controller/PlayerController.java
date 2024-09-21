@@ -54,6 +54,7 @@ public class PlayerController {
 
         try {
             GameModel game = fetchService.getGameById(gameId);
+            gameFlowService.checkMaximumPlayersForGame(game);
             validationService.ensureGameState(game, GameState.LOBBY);
 
             PlayerModel player = playerService.createPlayer(game, name);
