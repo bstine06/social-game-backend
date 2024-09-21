@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +40,7 @@ public class GameController {
         this.gameFlowService = gameFlowService;
     }
 
-    @PostMapping("/create-game")
+    @PostMapping
     public ResponseEntity<?> createGame() {
         try {
             GameModel game = gameService.createGame();
@@ -51,9 +53,8 @@ public class GameController {
         }
     }
 
-    @DeleteMapping("/delete-game")
-    public ResponseEntity<?> deleteGame(@RequestBody Map<String, String> payload) {
-        String gameId = payload.get("gameId");
+    @DeleteMapping("/{gameId}")
+    public ResponseEntity<?> deleteGame(@PathVariable String gameId) {
         try {
             gameService.deleteGame(gameId);
             logger.info("Game: {} : Successfully deleted game", gameId);
@@ -69,9 +70,8 @@ public class GameController {
         }
     }
 
-    @GetMapping("/get-state")
-    public ResponseEntity<?> getState(@RequestBody Map<String, String> payload) {
-        String gameId = payload.get("gameId");
+    @GetMapping("/{gameId}/state")
+    public ResponseEntity<?> getGame(@PathVariable String gameId) {
         try {
             GameModel game = gameService.getGameById(gameId);
             GameState gameState = gameService.getGameState(game);
@@ -88,9 +88,8 @@ public class GameController {
         }
     }
 
-    @PostMapping("/advance-state")
-    public ResponseEntity<?> advanceState(@RequestBody Map<String, String> payload) {
-        String gameId = payload.get("gameId");
+    @PatchMapping("/{gameId}/state")
+    public ResponseEntity<?> advanceState(@PathVariable String gameId) {
         try {
             GameModel game = gameService.getGameById(gameId);
             gameFlowService.tryAdvanceGameState(game);
@@ -107,32 +106,7 @@ public class GameController {
         }
     }
 
-    @PostMapping("/set-state")
-    public ResponseEntity<?> setState(@RequestBody Map<String, String> payload) {
-        String gameId = payload.get("gameId");
-        String gameState = payload.get("gameState");
-        try {
-            GameModel game = gameService.getGameById(gameId);
-            gameFlowService.checkMinimumPlayersForQuestionState(game);
-            GameModel updatedGame = gameService.setGameState(game, GameState.fromString(gameState));
-            logger.info("Game: {} : Successfully updated gameState to {}", gameId, gameState);
-            return ResponseEntity.ok(updatedGame);
-        } catch (IllegalArgumentException e) {
-            logger.error("Game: {} : Error while updating gameState", gameId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Could not update gameState", "message", e.getMessage()));
-        } catch (IllegalStateException e) {
-            logger.error("Game: {} : Error while updating gameState", gameId, e);
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Could not update gameState", "message", e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Game: {} : Error while updating gameState", gameId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Could not update gameState", "message", e.getMessage()));
-        }
-    }
-
-    @GetMapping("/get-all-games")
+    @GetMapping
     public ResponseEntity<?> getAllGames() {
         try {
             List<GameModel> allGames = gameService.getAllGames();
@@ -142,6 +116,23 @@ public class GameController {
             logger.error("Error while getting all games", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Could not get all games", "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{gameId}")
+    public ResponseEntity<?> getGameById(@PathVariable String gameId) {
+        try {
+            GameModel game = gameService.getGameById(gameId);
+            logger.info("Successfully retrieved game by id: {}", gameId);
+            return ResponseEntity.ok(game);
+        } catch (IllegalArgumentException e) {
+            logger.error("Game: {} : Error retrieving game", gameId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Could not retrieve game", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Game: {} : Error retrieving game", gameId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Could not retrieve game", "message", e.getMessage()));
         }
     }
 }
