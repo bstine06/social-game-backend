@@ -61,14 +61,27 @@ public class GameFlowService {
             }
         } else 
         if (game.getGameState() == GameState.ANSWER) {
-            // If all questions have recieved two answers, advance to the VOTE phase
+            // If all questions have recieved two answers, advance to the PRESENT phase
             List<QuestionModel> questions = questionService.getAllQuestionsByGame(game);
             boolean allQuestionsHaveTwoAnswers = questions.stream()
                 .allMatch(question -> answerService.hasTwoAnswers(question));
             if (allQuestionsHaveTwoAnswers) {
-                gameService.setGameState(game, GameState.VOTE);
+                gameService.setGameState(game, GameState.DISPLAY_ANSWERS);
                 logger.info("Game: {} : All questions received two answers, advanced gameState to : {}", game.getGameId(), game.getGameState());
             }
+        } else 
+        if (game.getGameState() == GameState.DISPLAY_ANSWERS) {
+            // Advance game state to VOTE
+            gameService.setGameState(game, GameState.VOTE);
+        } else 
+        if (game.getGameState() == GameState.VOTE) { 
+            // Check if there are any questions left to vote on
+            gameService.setGameState(game, GameState.DISPLAY_VOTES);
+        } else 
+        if (game.getGameState() == GameState.DISPLAY_VOTES) {
+            
+                gameService.setGameState(game, GameState.DISPLAY_ANSWERS);
+            
         }
     }
 

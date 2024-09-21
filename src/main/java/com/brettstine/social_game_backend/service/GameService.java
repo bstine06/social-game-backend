@@ -2,6 +2,8 @@ package com.brettstine.social_game_backend.service;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.brettstine.social_game_backend.model.GameModel;
@@ -11,6 +13,8 @@ import com.brettstine.social_game_backend.utils.GameCodeGenerator;
 
 @Service
 public class GameService {
+
+    private static final Logger logger = LoggerFactory.getLogger(GameFlowService.class);
 
     private final GameRepository gameRepository;
 
@@ -24,6 +28,7 @@ public class GameService {
         int maxAttempts = 100; // Limit number of tries to find a game code.
         // If this ever becomes a problem, we can scale the game codes to be longer.
 
+        logger.info("Checking for existence of game with randomly generated id: {}", gameCode);
         while (gameRepository.existsById(gameCode)) {
             if (attempts >= maxAttempts) {
                 throw new IllegalStateException(
@@ -34,13 +39,17 @@ public class GameService {
         }
 
         GameModel game = new GameModel(gameCode);
+
+        logger.info("Storing a new game record with id: {}", gameCode);
         return gameRepository.save(game);
     }
 
     public void deleteGame(String gameId) {
+        logger.info("Checking for existence of game with randomly generated id: {}", gameId);
         if (!gameRepository.existsById(gameId)) {
             throw new IllegalArgumentException("Game not found with ID: " + gameId);
         }
+        logger.info("Deleting game record with id: {}", gameId);
         gameRepository.deleteById(gameId);
     }
 

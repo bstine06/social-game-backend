@@ -28,8 +28,17 @@ public interface PlayerAnswerVoteRepository extends JpaRepository<PlayerAnswerVo
     @Query("DELETE FROM PlayerAnswerVoteModel pAV WHERE pAV.game IN :games")
     void deleteByGames(@Param("games") List<GameModel> games);
 
+    // Delete by a single game
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM PlayerAnswerVoteModel pAV WHERE pAV.game = :game")
+    void deleteByGame(@Param("game") GameModel game);
+
     @Query("SELECT COUNT(pAV) > 0 FROM PlayerAnswerVoteModel pAV WHERE pAV.player = :player AND pAV.answer = :answer AND pAV.game = :game")
     boolean hasPlayerVotedForAnswerInGame(@Param("player") PlayerModel player, @Param("answer") AnswerModel answer, @Param("game") GameModel game);
+
+    @Query("SELECT pAV.player FROM PlayerAnswerVoteModel pAV WHERE pAV.answer = :answer")
+    List<PlayerModel> findPlayersWhoVotedForAnswer(@Param("answer") AnswerModel answer);
 
 }
 

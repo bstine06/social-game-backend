@@ -4,8 +4,10 @@ public enum GameState {
     LOBBY,
     QUESTION,
     ASSIGN, 
-    ANSWER, 
+    ANSWER,
+    DISPLAY_ANSWERS,
     VOTE, 
+    DISPLAY_VOTES,
     SCORE, 
     POSTGAME;
 
