@@ -30,7 +30,7 @@ public class AnswerModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
-    @JsonIgnore
+    @JsonBackReference
     private PlayerModel player;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -66,8 +66,14 @@ public class AnswerModel {
         this.answerId = answerId;
     }
 
+    @JsonProperty("questionId")
     public String getQuestionId() {
-        return question.getQuestionId();
+        return question != null ? question.getQuestionId() : null;
+    }
+
+    @JsonProperty("playerId")
+    public String getPlayerId() {
+        return player != null ? player.getPlayerId() : null;
     }
 
     public GameModel getGame() {

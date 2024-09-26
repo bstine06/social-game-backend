@@ -1,9 +1,12 @@
 package com.brettstine.social_game_backend.model;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,12 +32,12 @@ public class QuestionModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", nullable = false)
-    @JsonIgnore
+    @JsonBackReference
     private GameModel game;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
-    @JsonIgnore
+    @JsonBackReference
     private PlayerModel player;
 
     @Column(name = "content")

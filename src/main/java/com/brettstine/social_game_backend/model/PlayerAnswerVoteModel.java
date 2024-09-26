@@ -3,6 +3,7 @@ package com.brettstine.social_game_backend.model;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -23,15 +24,18 @@ public class PlayerAnswerVoteModel {
     @Id
     @ManyToOne
     @JoinColumn(name = "player_id", nullable = false)
+    @JsonIgnore
     private PlayerModel player;
 
     @Id
     @ManyToOne
     @JoinColumn(name = "answer_id", nullable = false)
+    @JsonIgnore
     private AnswerModel answer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", nullable = false)
+    @JsonBackReference
     private GameModel game;
 
     @Column(name = "creation_time", nullable = false)
@@ -53,12 +57,22 @@ public class PlayerAnswerVoteModel {
         return player;
     }
 
+    @JsonProperty("playerId")
+    public String getPlayerId() {
+        return player.getPlayerId();
+    }
+
     public void setPlayer(PlayerModel player) {
         this.player = player;
     }
 
     public AnswerModel getAnswer() {
         return answer;
+    }
+
+    @JsonProperty("answerId")
+    public String getAnswerId() {
+        return answer.getAnswerId();
     }
 
     public void setAnswer(AnswerModel answer) {
@@ -69,7 +83,7 @@ public class PlayerAnswerVoteModel {
         return game;
     }
 
-    @JsonProperty("gameId")
+    @JsonIgnore
     public String getGameId() {
         return game != null ? game.getGameId() : null;  // Only return the gameId
     }
