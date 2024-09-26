@@ -8,6 +8,7 @@ import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
+import com.brettstine.social_game_backend.model.VotingStatus;
 
 @Service
 public class ValidationService {
@@ -68,6 +69,13 @@ public class ValidationService {
     public void ensureGameState(GameModel game, GameState requiredState) {
         if (!game.getGameState().equals(requiredState)) {
             throw new IllegalStateException("Invalid game state: Game must be in " + requiredState + " state");
+        }
+    }
+
+    public void ensureVotingIsInProgress(QuestionModel question) {
+        // ensure that the question is open for voting
+        if (question.getVotingStatus() != VotingStatus.IN_PROGRESS) {
+            throw new IllegalStateException("This resource is not active for voting");
         }
     }
 }

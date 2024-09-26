@@ -15,12 +15,14 @@ public class FetchService {
     private final PlayerService playerService;
     private final QuestionService questionService;
     private final AnswerService answerService;
+    private final VoteService voteService;
 
-    public FetchService(GameService gameService, PlayerService playerService, QuestionService questionService, AnswerService answerService) {
+    public FetchService(GameService gameService, PlayerService playerService, QuestionService questionService, AnswerService answerService, VoteService voteService) {
         this.gameService = gameService;
         this.playerService = playerService;
         this.questionService = questionService;
         this.answerService = answerService;
+        this.voteService = voteService;
     }
 
     public GameModel getGameById(String gameId) {
@@ -37,6 +39,10 @@ public class FetchService {
 
     public AnswerModel getAnswerById(String answerId) {
         return answerService.getAnswerById(answerId);
+    }
+
+    public QuestionModel getCurrentQuestion(GameModel game) {
+        return voteService.getCurrentQuestion(game);
     }
 }
 

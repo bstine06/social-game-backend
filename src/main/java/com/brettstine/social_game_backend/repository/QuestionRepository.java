@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
+import com.brettstine.social_game_backend.model.VotingStatus;
 
 public interface QuestionRepository extends JpaRepository<QuestionModel, String> {
 
@@ -26,6 +27,8 @@ public interface QuestionRepository extends JpaRepository<QuestionModel, String>
     @Transactional
     @Query("DELETE FROM QuestionModel q WHERE q.game IN :games")
     void deleteByGames(@Param("games") List<GameModel> games);
+
+    List<QuestionModel> findByGameAndVotingStatus(GameModel game, VotingStatus votingStatus);
 
 }
 

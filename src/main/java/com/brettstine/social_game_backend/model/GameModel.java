@@ -33,11 +33,22 @@ public class GameModel {
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
+    private List<QuestionModel> questions;
+
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<AnswerModel> answers;
+
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<QuestionAssignmentModel> questionAssignments;
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<PlayerAnswerVoteModel> playerAnswerVotes;
+
+    @Column(name = "timer_end")
+    private LocalDateTime timerEnd;
 
     public GameModel() {
     }
@@ -81,6 +92,14 @@ public class GameModel {
         this.players.add(player);
     }
 
+    public List<QuestionModel> getQuestions() {
+        return questions;
+    }
+
+    public List<AnswerModel> getAnswers() {
+        return answers;
+    }
+
     public List<QuestionAssignmentModel> getQuestionAssignments() {
         return questionAssignments;
     }
@@ -95,5 +114,13 @@ public class GameModel {
 
     public void setPlayerAnswerVotes(List<PlayerAnswerVoteModel> playerAnswerVotes) {
         this.playerAnswerVotes = playerAnswerVotes;
+    }
+
+    public LocalDateTime getTimerEnd() {
+        return timerEnd;
+    }
+
+    public void setTimerEnd(LocalDateTime time) {
+        this.timerEnd = time;
     }
 }

@@ -3,6 +3,7 @@ package com.brettstine.social_game_backend.model;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -34,7 +35,7 @@ public class AnswerModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
-    @JsonIgnore
+    @JsonBackReference
     private QuestionModel question;
 
     @Column(name = "content", nullable = false)
@@ -63,6 +64,10 @@ public class AnswerModel {
 
     public void setAnswerId(String answerId) {
         this.answerId = answerId;
+    }
+
+    public String getQuestionId() {
+        return question.getQuestionId();
     }
 
     public GameModel getGame() {

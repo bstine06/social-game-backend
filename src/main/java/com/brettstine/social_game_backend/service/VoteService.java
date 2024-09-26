@@ -1,22 +1,30 @@
 package com.brettstine.social_game_backend.service;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.brettstine.social_game_backend.model.AnswerModel;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerAnswerVoteModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
+import com.brettstine.social_game_backend.model.QuestionModel;
+import com.brettstine.social_game_backend.model.VotingStatus;
 import com.brettstine.social_game_backend.repository.PlayerAnswerVoteRepository;
+import com.brettstine.social_game_backend.repository.QuestionRepository;
 
 @Service
+@RequestMapping("/vote")
 public class VoteService {
     
     private final PlayerAnswerVoteRepository playerAnswerVoteRepository;
+    private final QuestionRepository questionRepository;
 
-    public VoteService(PlayerAnswerVoteRepository playerAnswerVoteRepository) {
+    public VoteService(PlayerAnswerVoteRepository playerAnswerVoteRepository, QuestionRepository questionRepository) {
         this.playerAnswerVoteRepository = playerAnswerVoteRepository;
+        this.questionRepository = questionRepository;
     }
 
     public void submitVote(GameModel game, PlayerModel player, AnswerModel answer) {
@@ -30,6 +38,39 @@ public class VoteService {
 
     public void clearAllVotesForGame(GameModel game) {
         playerAnswerVoteRepository.deleteByGame(game);
+    }
+
+    public QuestionModel getOneUnvotedQuestionInGame(GameModel game) {
+        return questionRepository.findByGameAndVotingStatus(game, VotingStatus.NOT_VOTED).getFirst();
+    }
+
+    public QuestionModel getCurrentQuestion(GameModel game) {
+        return questionRepository.findByGameAndVotingStatus(game, VotingStatus.IN_PROGRESS).getFirst();
+    }
+
+    public List<QuestionModel> getAllQuestions() {
+        return questionRepository.findAll();
+    }
+
+    public void openVotingForQuestion(QuestionModel question) {
+        if (question.getAnswers().size() < 2) {
+            throw new IllegalStateException("Cannot open voting for a question without at least 2 answers.");
+        }
+        GameModel game = question.getGame();
+        List<QuestionModel> questionsInProgressInGame = questionRepository.findByGameAndVotingStatus(game,
+                VotingStatus.IN_PROGRESS);
+
+        if (!questionsInProgressInGame.isEmpty()) {
+            throw new IllegalStateException("Another question is already in progress for this game.");
+        }
+
+        question.setVotingStatus(VotingStatus.IN_PROGRESS);
+        questionRepository.save(question);
+    }
+
+    public void closeVotingForQuestion(QuestionModel question) {
+        question.setVotingStatus(VotingStatus.COMPLETE);
+        questionRepository.save(question);
     }
 
 }

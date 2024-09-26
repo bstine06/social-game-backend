@@ -1,6 +1,8 @@
 package com.brettstine.social_game_backend.service;
 
 import java.util.List;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,22 +14,27 @@ import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.QuestionAssignmentModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
+import com.brettstine.social_game_backend.model.VotingStatus;
 
 @Service
 public class GameFlowService {
 
     private static final Logger logger = LoggerFactory.getLogger(GameFlowService.class);
 
+    private final int VOTING_TIME = 30;
+
     private final GameService gameService;
     private final PlayerService playerService;
     private final QuestionService questionService;
     private final AnswerService answerService;
+    private final VoteService voteService;
 
-    public GameFlowService(GameService gameService, PlayerService playerService, QuestionService questionService, AnswerService answerService) {
+    public GameFlowService(GameService gameService, PlayerService playerService, QuestionService questionService, AnswerService answerService, VoteService voteService) {
         this.gameService = gameService;
         this.playerService = playerService;
         this.questionService = questionService;
         this.answerService = answerService;
+        this.voteService = voteService;
     }
 
     // method to ensure no more than 10 players are added to a game
@@ -74,22 +81,39 @@ public class GameFlowService {
             boolean allQuestionsHaveTwoAnswers = questions.stream()
                 .allMatch(question -> answerService.hasTwoAnswers(question));
             if (allQuestionsHaveTwoAnswers) {
-                gameService.setGameState(game, GameState.DISPLAY_ANSWERS);
+                gameService.setGameState(game, GameState.FIND_BALLOT);
                 logger.info("Game: {} : All questions received two answers, advanced gameState to : {}", game.getGameId(), game.getGameState());
             }
         } else 
-        if (game.getGameState() == GameState.DISPLAY_ANSWERS) {
-            // Advance game state to VOTE
+        if (game.getGameState() == GameState.FIND_BALLOT) {
+            // Get a question that hasn't had a voting session for its answers yet
+            QuestionModel unvotedQuestion = voteService.getOneUnvotedQuestionInGame(game);
+            if (unvotedQuestion == null) {
+                // This means every ballot has been voted on
+                // Advance game to the scoring phase
+                gameService.setGameState(game, GameState.SCORE);
+                return;
+            }
+            voteService.openVotingForQuestion(unvotedQuestion);
+            gameService.setTimerEnd(game, LocalDateTime.now().plusSeconds(VOTING_TIME));
+            gameService.setGameState(game, GameState.DISPLAY_BALLOT);
+        } else 
+        if (game.getGameState() == GameState.DISPLAY_BALLOT) {
             gameService.setGameState(game, GameState.VOTE);
         } else 
-        if (game.getGameState() == GameState.VOTE) { 
-            // Check if there are any questions left to vote on
+        if (game.getGameState() == GameState.VOTE) {
+            // Check if the voting time has elapsed
+            LocalDateTime timerEnd = game.getTimerEnd();
+            if (timerEnd != null && LocalDateTime.now().isAfter(timerEnd)) {
+                gameService.setGameState(game, GameState.DISPLAY_VOTES);
+            }
             gameService.setGameState(game, GameState.DISPLAY_VOTES);
         } else 
         if (game.getGameState() == GameState.DISPLAY_VOTES) {
-            
-                gameService.setGameState(game, GameState.DISPLAY_ANSWERS);
-            
+            // Get the active voting question and close its voting
+            QuestionModel currentQuestion = voteService.getCurrentQuestion(game);
+            voteService.closeVotingForQuestion(currentQuestion);
+            gameService.setGameState(game, GameState.FIND_BALLOT);
         }
     }
 

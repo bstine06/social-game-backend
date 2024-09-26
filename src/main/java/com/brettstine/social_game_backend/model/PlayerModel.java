@@ -1,6 +1,7 @@
 package com.brettstine.social_game_backend.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -13,6 +14,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -30,6 +33,14 @@ public class PlayerModel {
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private QuestionModel question;
+
+    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<AnswerModel> answers;
 
     @Column(name = "creation_time", nullable = false)
     @JsonIgnore
@@ -65,6 +76,14 @@ public class PlayerModel {
 
     public String getName() {
         return name;
+    }
+
+    public QuestionModel getQuestion() {
+        return question;
+    }
+
+    public List<AnswerModel> getAnswers() {
+        return answers;
     }
 
     public void setName(String name) {

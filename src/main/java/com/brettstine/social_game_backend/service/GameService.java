@@ -1,7 +1,9 @@
 package com.brettstine.social_game_backend.service;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
+import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -10,6 +12,8 @@ import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.repository.GameRepository;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.utils.GameCodeGenerator;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class GameService {
@@ -53,8 +57,11 @@ public class GameService {
         gameRepository.deleteById(gameId);
     }
 
+    @Transactional
     public GameModel getGameById(String gameId) {
-        return gameRepository.findById(gameId).orElseThrow(() -> new IllegalArgumentException("Game not found with ID: " + gameId));
+        GameModel game = gameRepository.findById(gameId).orElseThrow(() -> new IllegalArgumentException("Game not found with ID: " + gameId));
+        Hibernate.initialize(game.getPlayers());
+        return game;
     }
 
     public GameModel setGameState(GameModel game, GameState gameState) {
@@ -74,5 +81,13 @@ public class GameService {
     public List<GameModel> getAllGames() {
         List<GameModel> allGames = gameRepository.findAll();
         return allGames;
+    }
+
+    public LocalDateTime getTimerEnd(GameModel game) {
+        return game.getTimerEnd();
+    }
+
+    public void setTimerEnd(GameModel game, LocalDateTime time) {
+        game.setTimerEnd(time);
     }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
@@ -43,9 +44,12 @@ public class QuestionModel {
     @JsonIgnore
     private LocalDateTime creationTime;
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonIgnore
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<AnswerModel> answers;
+
+    @Column(name = "voting_status")
+    private VotingStatus votingStatus;
 
     public QuestionModel() {
     }
@@ -56,6 +60,7 @@ public class QuestionModel {
         this.player = player;
         this.content = content;
         this.creationTime = LocalDateTime.now();
+        this.votingStatus = VotingStatus.NOT_VOTED;
     }
 
     public String getQuestionId() {
@@ -105,5 +110,13 @@ public class QuestionModel {
 
     public void setAnswers(List<AnswerModel> answers) {
         this.answers = answers;
+    }
+
+    public VotingStatus getVotingStatus() {
+        return votingStatus;
+    }
+
+    public void setVotingStatus(VotingStatus votingStatus) {
+        this.votingStatus = votingStatus;
     }
 }
