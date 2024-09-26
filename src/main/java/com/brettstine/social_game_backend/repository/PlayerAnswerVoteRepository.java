@@ -40,5 +40,9 @@ public interface PlayerAnswerVoteRepository extends JpaRepository<PlayerAnswerVo
     @Query("SELECT pAV.player FROM PlayerAnswerVoteModel pAV WHERE pAV.answer = :answer")
     List<PlayerModel> findPlayersWhoVotedForAnswer(@Param("answer") AnswerModel answer);
 
+    // Method to count votes by AnswerModel
+    @Query("SELECT COUNT(v) FROM PlayerAnswerVoteModel v WHERE v.answer = :answer")
+    int countByAnswer(@Param("answer") AnswerModel answer);
+
 }
 

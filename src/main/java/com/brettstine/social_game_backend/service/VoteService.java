@@ -41,11 +41,23 @@ public class VoteService {
     }
 
     public QuestionModel getOneUnvotedQuestionInGame(GameModel game) {
-        return questionRepository.findByGameAndVotingStatus(game, VotingStatus.NOT_VOTED).getFirst();
+        List<QuestionModel> questions = questionRepository.findByGameAndVotingStatus(game, VotingStatus.IN_PROGRESS);
+
+        if (questions.isEmpty()) {
+            return null;
+        }
+
+        return questions.get(0); // Assuming you want the first question.
     }
 
     public QuestionModel getCurrentQuestion(GameModel game) {
-        return questionRepository.findByGameAndVotingStatus(game, VotingStatus.IN_PROGRESS).getFirst();
+        List<QuestionModel> questions = questionRepository.findByGameAndVotingStatus(game, VotingStatus.IN_PROGRESS);
+
+        if (questions.isEmpty()) {
+            throw new IllegalStateException("No question found with VotingStatus.IN_PROGRESS for the given game.");
+        }
+
+        return questions.get(0); // Assuming you want the first question.
     }
 
     public List<QuestionModel> getAllQuestions() {
@@ -71,6 +83,14 @@ public class VoteService {
     public void closeVotingForQuestion(QuestionModel question) {
         question.setVotingStatus(VotingStatus.COMPLETE);
         questionRepository.save(question);
+    }
+
+    public boolean hasQuestionReceivedAllPossibleVotes(QuestionModel question) {
+        int totalPossibleVotes = question.getGame().getPlayers().size() - 2; //exclude the players actively competing
+        int totalVotes = question.getAnswers().stream()
+                .mapToInt(answer -> playerAnswerVoteRepository.countByAnswer(answer))
+                .sum();
+        return (totalVotes >= totalPossibleVotes);
     }
 
 }

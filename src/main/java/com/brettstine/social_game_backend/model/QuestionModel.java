@@ -83,6 +83,11 @@ public class QuestionModel {
         return player;
     }
 
+    @JsonProperty("playerId")
+    public String getPlayerId() {
+        return player.getPlayerId();
+    }
+
     public String getContent() {
         return content;
     }

@@ -55,14 +55,21 @@ public class VoteController {
     public ResponseEntity<?> submitVote(HttpServletRequest request, @RequestBody Map<String, String> payload) {
         String answerId = payload.get("answerId");
         String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+        if (playerId == null || playerId.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "error submitting question", "message", "Player Id was not given"));
+        }
         try {
             PlayerModel player = fetchService.getPlayerById(playerId);
             AnswerModel answer = fetchService.getAnswerById(answerId);
             GameModel game = player.getGame();
+            validationService.validatePlayer(player, game);
             validationService.ensureGameState(game, GameState.VOTE);
             validationService.ensureVotingIsInProgress(answer.getQuestion());
+            validationService.ensurePlayerIsntActivelyCompeting(player, answer.getQuestion());
             voteService.submitVote(game, player, answer);
             logger.info("Game: {} : Successfully submitted vote from player with id: {}", game.getGameId(), player.getPlayerId());
+            gameFlowService.tryAdvanceGameState(game);
             return ResponseEntity.ok(Map.of("success", "vote submitted"));
         } catch (IllegalArgumentException e) {
             logger.error("Error submitting vote", e);
@@ -81,6 +88,10 @@ public class VoteController {
             GameModel game = fetchService.getGameById(gameId);
             QuestionModel currentQuestion = voteService.getCurrentQuestion(game); 
             return ResponseEntity.ok(currentQuestion);
+        } catch (IllegalStateException e) {
+            logger.error("Game: {} : Error retreiving current question", gameId, e);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "error retreiving current question", "message", e.getMessage()));
         } catch (Exception e) {
             logger.error("Game: {} : Error retreiving current question", gameId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

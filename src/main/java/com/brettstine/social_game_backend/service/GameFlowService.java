@@ -107,7 +107,10 @@ public class GameFlowService {
             if (timerEnd != null && LocalDateTime.now().isAfter(timerEnd)) {
                 gameService.setGameState(game, GameState.DISPLAY_VOTES);
             }
-            gameService.setGameState(game, GameState.DISPLAY_VOTES);
+            // Check is all possible votes have been submitted
+            if (voteService.hasQuestionReceivedAllPossibleVotes(voteService.getCurrentQuestion(game))) {
+                gameService.setGameState(game, GameState.DISPLAY_VOTES);
+            }
         } else 
         if (game.getGameState() == GameState.DISPLAY_VOTES) {
             // Get the active voting question and close its voting

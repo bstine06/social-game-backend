@@ -1,5 +1,8 @@
 package com.brettstine.social_game_backend.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -77,5 +80,16 @@ public class ValidationService {
         if (question.getVotingStatus() != VotingStatus.IN_PROGRESS) {
             throw new IllegalStateException("This resource is not active for voting");
         }
+    }
+
+    public void ensurePlayerIsntActivelyCompeting(PlayerModel player, QuestionModel question) {
+        // get players who are actively competing (those who have answers in the running)
+        question.getAnswers().stream()
+                .map(answer -> answer.getPlayerId())
+                .forEach((playerId) -> {
+                    if (playerId.equals(player.getPlayerId())) {
+                        throw new IllegalStateException("A player who is actively competing may not cast votes");
+                    }
+                });
     }
 }
