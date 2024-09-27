@@ -143,6 +143,13 @@ public class GameFlowService {
             questionService.addQuestionForPlayer(game, currentPlayer, nextPlayer2Question);
         }
     }
+
+    public void grantPointForVote(AnswerModel answer) {
+        //get player who submitted the answer
+        PlayerModel player = answer.getPlayer();
+        playerService.incrementScoreForPlayer(player);
+        logger.info("Incremented score for player: {}", player.getPlayerId());
+    }
     
 }
 

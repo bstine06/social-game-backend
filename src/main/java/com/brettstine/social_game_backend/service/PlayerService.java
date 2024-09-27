@@ -46,4 +46,12 @@ public class PlayerService {
     public List<PlayerModel> getAllPlayers() {
         return playerRepository.findAll();
     }
+
+    public void incrementScoreForPlayer(PlayerModel player) {
+        if (player == null) {
+            throw new IllegalArgumentException("Player cannot be null");
+        }
+        player.incrementScore();
+        playerRepository.save(player);
+    }
 }

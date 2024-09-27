@@ -44,6 +44,9 @@ public class PlayerModel {
     @JsonManagedReference
     private List<AnswerModel> answers;
 
+    @Column(name = "score", nullable = false)
+    private int score;
+
     @Column(name = "creation_time", nullable = false)
     @JsonIgnore
     private LocalDateTime creationTime;
@@ -56,6 +59,7 @@ public class PlayerModel {
         this.game = game;
         this.name = name;
         this.creationTime = LocalDateTime.now();
+        this.score = 0;
     }
 
     // Getters and Setters
@@ -90,6 +94,14 @@ public class PlayerModel {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public void incrementScore() {
+        score++;
     }
 
     public LocalDateTime getCreationTime() {

@@ -68,6 +68,7 @@ public class VoteController {
             validationService.ensureVotingIsInProgress(answer.getQuestion());
             validationService.ensurePlayerIsntActivelyCompeting(player, answer.getQuestion());
             voteService.submitVote(game, player, answer);
+            gameFlowService.grantPointForVote(answer);
             logger.info("Game: {} : Successfully submitted vote from player with id: {}", game.getGameId(), player.getPlayerId());
             gameFlowService.tryAdvanceGameState(game);
             return ResponseEntity.ok(Map.of("success", "vote submitted"));
