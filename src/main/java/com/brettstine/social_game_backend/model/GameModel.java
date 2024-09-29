@@ -2,6 +2,7 @@ package com.brettstine.social_game_backend.model;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -11,7 +12,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -24,6 +27,11 @@ public class GameModel {
 
     @Column(name = "game_state", nullable = false)
     private GameState gameState;
+
+    // Reference to actual SessionModel for the host
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "host_session_id", nullable = true)
+    private SessionModel hostSession;
 
     @Column(name = "creation_time", nullable = false)
     @JsonIgnore
@@ -55,10 +63,11 @@ public class GameModel {
     public GameModel() {
     }
 
-    public GameModel(String gameId) {
+    public GameModel(String gameId, SessionModel hostSession) {
         this.gameState = GameState.LOBBY;
         this.gameId = gameId;
         this.creationTime = LocalDateTime.now();
+        this.hostSession = hostSession;
     }
 
     public String getGameId() {
@@ -75,6 +84,14 @@ public class GameModel {
 
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
+    }
+
+    public SessionModel getHostSession() {
+        return hostSession;
+    }
+
+    public void setHostSession(SessionModel hostSession) {
+        this.hostSession = hostSession;
     }
 
     public LocalDateTime getCreationTime() {

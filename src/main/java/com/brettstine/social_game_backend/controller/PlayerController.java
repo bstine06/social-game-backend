@@ -3,6 +3,7 @@ package com.brettstine.social_game_backend.controller;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
+import com.brettstine.social_game_backend.model.SessionModel;
 import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.PlayerService;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,27 +49,21 @@ public class PlayerController {
         this.validationService = validationService;
     }
 
-    @PostMapping("/create-player-and-add-to-game")
-    public ResponseEntity<?> createPlayerAndAddToGame(HttpServletResponse response, @RequestBody Map<String, String> payload) {
+    @PostMapping
+    public ResponseEntity<?> createPlayerAndAddToGame(HttpServletRequest request, @RequestBody Map<String, String> payload) {
         String name = payload.get("name");
         String gameId = payload.get("gameId");
+        String sessionId = CookieUtil.getDataFromCookie(request, "sessionId");
 
         try {
             GameModel game = fetchService.getGameById(gameId);
+            SessionModel session = fetchService.getSessionById(sessionId);
             gameFlowService.checkMaximumPlayersForGame(game);
             validationService.ensureGameState(game, GameState.LOBBY);
 
-            PlayerModel player = playerService.createPlayer(game, name);
+            PlayerModel player = playerService.createPlayer(game, session, name);
             String playerId = player.getPlayerId();
             logger.info("Game: {} : Player created with ID: {}, name: {}", gameId, playerId, name);
-
-            Cookie cookie = new Cookie("playerId", playerId);
-            cookie.setHttpOnly(true);
-            cookie.setPath("/");
-            cookie.setMaxAge(60 * 60); // 1 hour
-            cookie.setSecure(false); // Use this line for HTTP requests only
-            response.addCookie(cookie);
-            logger.info("Player cookie set with ID: {}", playerId);
 
             return ResponseEntity.ok(player);
         } catch (IllegalArgumentException e) {
@@ -82,9 +78,8 @@ public class PlayerController {
         }
     }
 
-    @GetMapping("/get-player")
-    public ResponseEntity<?> getPlayer(HttpServletRequest request) {
-        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+    @GetMapping("/{playerId}")
+    public ResponseEntity<?> getPlayer(@PathVariable String playerId) {
         try {
             PlayerModel player = playerService.getPlayerById(playerId);
             logger.info("Successfully retrieved player with id: {}", playerId);
@@ -98,26 +93,8 @@ public class PlayerController {
         }
     }
 
-    @PostMapping("/set-name")
-    public ResponseEntity<?> setName(HttpServletRequest request, @RequestBody Map<String, String> payload) {
-        String name = payload.get("name");
-        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
-        try {
-            PlayerModel player = playerService.setName(playerId, name);
-            logger.info("Successfully set name for player with id: {}, name: {}", playerId, name);
-            return ResponseEntity.ok(player);
-        } catch (IllegalArgumentException e) {
-            logger.error("Error setting name of player with id: {}", playerId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "could not set player", "message", e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Error setting name of player with id: {}", playerId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "could not set player", "message", e.getMessage()));
-        }
-    }
-
-    @GetMapping("/get-all-players-in-game")
-    public ResponseEntity<?> getAllPlayersInGame(@RequestBody Map<String, String> payload) {
-        String gameId = payload.get("gameId");
+    @GetMapping("/{gameId}")
+    public ResponseEntity<?> getAllPlayersInGame(@PathVariable String gameId) {
         try {
             GameModel game = fetchService.getGameById(gameId);
             List<PlayerModel> allPlayers = game.getPlayers();
@@ -132,7 +109,7 @@ public class PlayerController {
         }
     }
 
-    @GetMapping("/get-all-players")
+    @GetMapping("/all")
     public ResponseEntity<?> getAllPlayers() {
         try {
             List<PlayerModel> allPlayers = playerService.getAllPlayers();

@@ -88,10 +88,10 @@ public class QuestionController {
     public ResponseEntity<?> submitQuestion(HttpServletRequest request, @RequestBody Map<String, String> payload) {
         String gameId = payload.get("gameId");
         String questionContent = payload.get("question");
-        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+        String sessionId = CookieUtil.getDataFromCookie(request, "sessionId");
         try {
             GameModel game = fetchService.getGameById(gameId);
-            PlayerModel player = fetchService.getPlayerById(playerId);
+            PlayerModel player = fetchService.getPlayerBySessionId(sessionId);
             validationService.ensureGameState(game, GameState.QUESTION);
             validationService.validatePlayerCanSubmitQuestion(player);
             QuestionModel question = questionService.submitQuestion(game, player, questionContent);
@@ -109,20 +109,20 @@ public class QuestionController {
         }
     }
 
-    @GetMapping("/get-questions-for-player")
-    public ResponseEntity<?> getQuestionsForPlayer(HttpServletRequest request) {
-        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+    @GetMapping("/get-questions-for-session")
+    public ResponseEntity<?> getQuestionsForSession(HttpServletRequest request) {
+        String sessionId = CookieUtil.getDataFromCookie(request, "session");
         try {
-            PlayerModel player = fetchService.getPlayerById(playerId);
+            PlayerModel player = fetchService.getPlayerBySessionId(sessionId);
             List<QuestionModel> questions = questionService.getQuestionsForPlayer(player);
-            logger.info("Successfully retrieved questions for player with id: {}", playerId);
+            logger.info("Successfully retrieved questions for player with id: {}", player.getPlayerId());
             return ResponseEntity.ok(questions);
         } catch (IllegalArgumentException e) {
-            logger.error("Error retrieving questions for player with id: {}", playerId, e);
+            logger.error("Error retrieving questions for session with id: {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "error submitting question", "message", e.getMessage()));
         } catch (Exception e) {
-            logger.error("Error retrieving questions for player with id: {}", playerId, e);
+            logger.error("Error retrieving questions for session with id: {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "error submitting question", "message", e.getMessage()));
         }

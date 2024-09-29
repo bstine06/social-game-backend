@@ -17,10 +17,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.brettstine.social_game_backend.model.GameModel;
+import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.GameService;
+import com.brettstine.social_game_backend.utils.CookieUtil;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.brettstine.social_game_backend.model.GameState;
+import com.brettstine.social_game_backend.model.SessionModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,17 +41,22 @@ public class GameController {
 
     private final GameService gameService;
     private final GameFlowService gameFlowService;
+    private final FetchService fetchService;
 
-    public GameController(GameService gameService, GameFlowService gameFlowService) {
+    public GameController(GameService gameService, GameFlowService gameFlowService, FetchService fetchService) {
         this.gameService = gameService;
         this.gameFlowService = gameFlowService;
+        this.fetchService = fetchService;
     }
 
     @PostMapping
-    public ResponseEntity<?> createGame() {
+    public ResponseEntity<?> createGame(HttpServletRequest request) {
+        String hostSessionId = CookieUtil.getDataFromCookie(request, "sessionId");
         try {
-            GameModel game = gameService.createGame();
+            SessionModel hostSession = fetchService.getSessionById(hostSessionId);
+            GameModel game = gameService.createGame(hostSession);
             logger.info("Game: {} : Successfully created game", game.getGameId());
+            
             return ResponseEntity.ok(game);
         } catch (Exception e) {
             logger.error("Error creating game: ", e);

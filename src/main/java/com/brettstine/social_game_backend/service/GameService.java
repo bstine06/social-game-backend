@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.repository.GameRepository;
 import com.brettstine.social_game_backend.model.GameState;
+import com.brettstine.social_game_backend.model.SessionModel;
 import com.brettstine.social_game_backend.utils.GameCodeGenerator;
 
 import jakarta.transaction.Transactional;
@@ -26,7 +27,7 @@ public class GameService {
         this.gameRepository = gameRepository;
     }
 
-    public GameModel createGame() {
+    public GameModel createGame(SessionModel hostSession) {
         String gameCode = GameCodeGenerator.generateGameCode();
         int attempts = 0;
         int maxAttempts = 100; // Limit number of tries to find a game code.
@@ -42,7 +43,7 @@ public class GameService {
             attempts++;
         }
 
-        GameModel game = new GameModel(gameCode);
+        GameModel game = new GameModel(gameCode, hostSession);
 
         logger.info("Storing a new game record with id: {}", gameCode);
         return gameRepository.save(game);
