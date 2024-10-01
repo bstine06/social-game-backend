@@ -18,7 +18,7 @@ import jakarta.transaction.Transactional;
 @Service
 public class GameService {
 
-    private static final Logger logger = LoggerFactory.getLogger(GameFlowService.class);
+    private static final Logger logger = LoggerFactory.getLogger(GameService.class);
 
     private final GameRepository gameRepository;
 
@@ -49,7 +49,7 @@ public class GameService {
     }
 
     public void deleteGame(String gameId) {
-        logger.info("Checking for existence of game with randomly generated id: {}", gameId);
+        logger.info("Delete requested: Checking for existence of game with id: {}", gameId);
         if (!gameRepository.existsById(gameId)) {
             throw new IllegalArgumentException("Game not found with ID: " + gameId);
         }

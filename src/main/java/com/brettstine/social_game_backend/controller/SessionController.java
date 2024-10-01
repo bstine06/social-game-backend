@@ -17,6 +17,7 @@ import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 @Controller
@@ -33,7 +34,7 @@ public class SessionController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String,String>> getSessionRole(HttpServletRequest request) {
+    public ResponseEntity<Map<String,String>> getSessionRole(HttpServletRequest request, HttpServletResponse response) {
         
         String optionalHostId = CookieUtil.getDataFromCookie(request, "hostId");
         String optionalPlayerId=CookieUtil.getDataFromCookie(request, "playerId");
@@ -44,6 +45,8 @@ public class SessionController {
                 return ResponseEntity.ok(Map.of("role", "PLAYER"));
             } catch (IllegalArgumentException e) {
                 logger.info("Caught non-problematic exception: no player found with id: {}", optionalPlayerId);
+                CookieUtil.deleteCookie(response, "playerId");
+                logger.info("Deleted stale player cookie with id: {}", optionalPlayerId);
             }
         }
 
@@ -53,6 +56,8 @@ public class SessionController {
                 return ResponseEntity.ok(Map.of("role", "HOST"));
             } catch (IllegalArgumentException e) {
                 logger.info("Caught non-problematic exception: no game found with host id: {}", optionalHostId);
+                CookieUtil.deleteCookie(response, "hostId");
+                logger.info("Deleted stale host cookie with id: {}", optionalHostId);
             }
         }
 

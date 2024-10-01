@@ -67,10 +67,13 @@ public class GameController {
     }
 
     @DeleteMapping("/{gameId}")
-    public ResponseEntity<?> deleteGame(@PathVariable String gameId) {
+    public ResponseEntity<?> deleteGame(@PathVariable String gameId, HttpServletRequest request, HttpServletResponse response) {
         try {
             gameService.deleteGame(gameId);
             logger.info("Game: {} : Successfully deleted game", gameId);
+            String hostId = CookieUtil.getDataFromCookie(request, "hostId");
+            CookieUtil.deleteCookie(response, "hostId");
+            logger.info("Deleted host cookie with id: {}", hostId);
             return ResponseEntity.ok(Map.of("message", "Successfully deleted game", "gameId", gameId));
         } catch (IllegalArgumentException e) {
             logger.error("Game: {} : Error deleting game", gameId, e);
