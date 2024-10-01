@@ -21,10 +21,6 @@ public interface PlayerRepository extends JpaRepository<PlayerModel, String> {
     @Transactional
     @Query("DELETE FROM PlayerModel p WHERE p.game IN :games")
     void deleteByGames(@Param("games") List<GameModel> games);
-
-    // Custom query to find player by session ID
-    @Query("SELECT p FROM PlayerModel p WHERE p.session.sessionId = :sessionId")
-    PlayerModel findBySessionId(@Param("sessionId") String sessionId);
 }
 
 

@@ -28,10 +28,8 @@ public class GameModel {
     @Column(name = "game_state", nullable = false)
     private GameState gameState;
 
-    // Reference to actual SessionModel for the host
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "host_session_id", nullable = true)
-    private SessionModel hostSession;
+    @Column(name = "host_id", nullable = false, unique = true)
+    private String hostId;
 
     @Column(name = "creation_time", nullable = false)
     @JsonIgnore
@@ -63,11 +61,11 @@ public class GameModel {
     public GameModel() {
     }
 
-    public GameModel(String gameId, SessionModel hostSession) {
+    public GameModel(String gameId) {
         this.gameState = GameState.LOBBY;
         this.gameId = gameId;
         this.creationTime = LocalDateTime.now();
-        this.hostSession = hostSession;
+        this.hostId = UUID.randomUUID().toString();
     }
 
     public String getGameId() {
@@ -86,12 +84,8 @@ public class GameModel {
         this.gameState = gameState;
     }
 
-    public SessionModel getHostSession() {
-        return hostSession;
-    }
-
-    public void setHostSession(SessionModel hostSession) {
-        this.hostSession = hostSession;
+    public String getHostId() {
+        return hostId;
     }
 
     public LocalDateTime getCreationTime() {

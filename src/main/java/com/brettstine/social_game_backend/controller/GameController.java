@@ -27,7 +27,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import com.brettstine.social_game_backend.model.GameState;
-import com.brettstine.social_game_backend.model.SessionModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,12 +49,14 @@ public class GameController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createGame(HttpServletRequest request) {
-        String hostSessionId = CookieUtil.getDataFromCookie(request, "sessionId");
+    public ResponseEntity<?> createGame(HttpServletResponse response) {
         try {
-            SessionModel hostSession = fetchService.getSessionById(hostSessionId);
-            GameModel game = gameService.createGame(hostSession);
+            GameModel game = gameService.createGame();
             logger.info("Game: {} : Successfully created game", game.getGameId());
+
+            String hostId = game.getHostId();
+            CookieUtil.setHttpCookie(response, "hostId", hostId, 3600);
+            logger.info("Host cookie set with ID: {}", hostId);
             
             return ResponseEntity.ok(game);
         } catch (Exception e) {
@@ -143,6 +144,24 @@ public class GameController {
                     .body(Map.of("error", "Could not retrieve game", "message", e.getMessage()));
         } catch (Exception e) {
             logger.error("Game: {} : Error retrieving game", gameId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Could not retrieve game", "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/get-by-host-id")
+    public ResponseEntity<?> getGameByHostId(HttpServletRequest request) {
+        String hostId = CookieUtil.getDataFromCookie(request, "hostId");
+        try {
+            GameModel game = gameService.getGameByHostId(hostId);
+            logger.info("Successfully retrieved game with host id: {}", hostId);
+            return ResponseEntity.ok(game);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error retrieving game", e); 
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Could not retrieve game", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error retrieving game", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Could not retrieve game", "message", e.getMessage()));
         }

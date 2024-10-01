@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.repository.GameRepository;
 import com.brettstine.social_game_backend.model.GameState;
-import com.brettstine.social_game_backend.model.SessionModel;
 import com.brettstine.social_game_backend.utils.GameCodeGenerator;
 
 import jakarta.transaction.Transactional;
@@ -27,7 +26,7 @@ public class GameService {
         this.gameRepository = gameRepository;
     }
 
-    public GameModel createGame(SessionModel hostSession) {
+    public GameModel createGame() {
         String gameCode = GameCodeGenerator.generateGameCode();
         int attempts = 0;
         int maxAttempts = 100; // Limit number of tries to find a game code.
@@ -43,7 +42,7 @@ public class GameService {
             attempts++;
         }
 
-        GameModel game = new GameModel(gameCode, hostSession);
+        GameModel game = new GameModel(gameCode);
 
         logger.info("Storing a new game record with id: {}", gameCode);
         return gameRepository.save(game);
@@ -61,6 +60,13 @@ public class GameService {
     @Transactional
     public GameModel getGameById(String gameId) {
         GameModel game = gameRepository.findById(gameId).orElseThrow(() -> new IllegalArgumentException("Game not found with ID: " + gameId));
+        Hibernate.initialize(game.getPlayers());
+        return game;
+    }
+
+    @Transactional
+    public GameModel getGameByHostId(String hostId) {
+        GameModel game = gameRepository.findByHostId(hostId).orElseThrow(() -> new IllegalArgumentException("No game found with host ID: " + hostId));
         Hibernate.initialize(game.getPlayers());
         return game;
     }

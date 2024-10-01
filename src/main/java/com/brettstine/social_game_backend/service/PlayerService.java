@@ -2,7 +2,6 @@ package com.brettstine.social_game_backend.service;
 
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
-import com.brettstine.social_game_backend.model.SessionModel;
 import com.brettstine.social_game_backend.repository.PlayerRepository;
 
 import org.springframework.stereotype.Service;
@@ -18,8 +17,8 @@ public class PlayerService {
         this.playerRepository = playerRepository;
     }
 
-    public PlayerModel createPlayer(GameModel game, SessionModel session, String name) {
-        PlayerModel player = new PlayerModel(game, session, name);
+    public PlayerModel createPlayer(GameModel game, String name) {
+        PlayerModel player = new PlayerModel(game, name);
         return playerRepository.save(player);
     }
 
@@ -54,9 +53,5 @@ public class PlayerService {
         }
         player.incrementScore();
         playerRepository.save(player);
-    }
-
-    public PlayerModel getPlayerBySessionId(String sessionId) {
-        return playerRepository.findBySessionId(sessionId);
     }
 }

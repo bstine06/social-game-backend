@@ -2,6 +2,7 @@ package com.brettstine.social_game_backend.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
@@ -20,5 +21,8 @@ public interface GameRepository extends JpaRepository<GameModel, String> {
 
     @Query("SELECT g FROM GameModel g WHERE g.creationTime < :cutoffTime")
     List<GameModel> findOldGames(@Param("cutoffTime") LocalDateTime cutoffTime);
+
+    @Query("SELECT g FROM GameModel g WHERE g.hostId = :hostId")
+    Optional<GameModel> findByHostId(@Param("hostId") String hostId);
 }
 

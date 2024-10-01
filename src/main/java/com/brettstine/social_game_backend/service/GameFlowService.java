@@ -14,7 +14,6 @@ import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.QuestionAssignmentModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
-import com.brettstine.social_game_backend.model.SessionModel;
 import com.brettstine.social_game_backend.model.VotingStatus;
 
 @Service
@@ -38,8 +37,8 @@ public class GameFlowService {
         this.voteService = voteService;
     }
 
-    public GameModel createGame(SessionModel hostSession) {
-        return gameService.createGame(hostSession);
+    public GameModel createGame() {
+        return gameService.createGame();
     }
 
     // method to ensure no more than 10 players are added to a game

@@ -108,10 +108,10 @@ public class AnswerController {
         String gameId = payload.get("gameId");
         String questionId = payload.get("questionId");
         String answerContent = payload.get("answer");
-        String sessionId = CookieUtil.getDataFromCookie(request, "sessionId");
+        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
         try {
             GameModel game = fetchService.getGameById(gameId);
-            PlayerModel player = fetchService.getPlayerBySessionId(sessionId);
+            PlayerModel player = fetchService.getPlayerById(playerId);
             QuestionModel question = fetchService.getQuestionById(questionId);
             validationService.ensureGameState(game, GameState.ANSWER);
             validationService.validatePlayer(player, game);

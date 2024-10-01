@@ -3,7 +3,6 @@ package com.brettstine.social_game_backend.controller;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
-import com.brettstine.social_game_backend.model.SessionModel;
 import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.PlayerService;
@@ -50,20 +49,21 @@ public class PlayerController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createPlayerAndAddToGame(HttpServletRequest request, @RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> createPlayerAndAddToGame(HttpServletResponse response, @RequestBody Map<String, String> payload) {
         String name = payload.get("name");
         String gameId = payload.get("gameId");
-        String sessionId = CookieUtil.getDataFromCookie(request, "sessionId");
 
         try {
             GameModel game = fetchService.getGameById(gameId);
-            SessionModel session = fetchService.getSessionById(sessionId);
             gameFlowService.checkMaximumPlayersForGame(game);
             validationService.ensureGameState(game, GameState.LOBBY);
 
-            PlayerModel player = playerService.createPlayer(game, session, name);
+            PlayerModel player = playerService.createPlayer(game, name);
             String playerId = player.getPlayerId();
             logger.info("Game: {} : Player created with ID: {}, name: {}", gameId, playerId, name);
+
+            CookieUtil.setHttpCookie(response, "playerId", playerId, 3600);;
+            logger.info("Player cookie set with ID: {}", playerId);
 
             return ResponseEntity.ok(player);
         } catch (IllegalArgumentException e) {
@@ -78,18 +78,19 @@ public class PlayerController {
         }
     }
 
-    @GetMapping("/{playerId}")
-    public ResponseEntity<?> getPlayer(@PathVariable String playerId) {
+    @GetMapping
+    public ResponseEntity<?> getPlayer(HttpServletRequest request) {
+        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
         try {
             PlayerModel player = playerService.getPlayerById(playerId);
             logger.info("Successfully retrieved player with id: {}", playerId);
             return ResponseEntity.ok(player);
         } catch (IllegalArgumentException e) {
             logger.error("Error retrieving player with id: {}", playerId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "could not set player", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "could not get player", "message", e.getMessage()));
         } catch (Exception e) {
             logger.error("Error retrieving player with id: {}", playerId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "could not set player", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "could not get player", "message", e.getMessage()));
         }
     }
 

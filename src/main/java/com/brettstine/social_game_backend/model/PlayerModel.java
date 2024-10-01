@@ -36,11 +36,6 @@ public class PlayerModel {
     @Column(name = "name", nullable = false)
     private String name;
 
-    // Reference the actual SessionModel instead of sessionId
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "session_id", nullable = true, unique = true)  // Nullable, since a player may not always have a session
-    private SessionModel session;
-
     @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private QuestionModel question;
@@ -59,10 +54,9 @@ public class PlayerModel {
     public PlayerModel() {
     }
 
-    public PlayerModel(GameModel game, SessionModel session, String name) {
+    public PlayerModel(GameModel game, String name) {
         this.playerId = UUID.randomUUID().toString();
         this.game = game;
-        this.session = session;
         this.name = name;
         this.creationTime = LocalDateTime.now();
         this.score = 0;
@@ -88,14 +82,6 @@ public class PlayerModel {
 
     public String getName() {
         return name;
-    }
-
-    public SessionModel getSession() {
-        return session;
-    }
-
-    public void setSession(SessionModel session) {
-        this.session = session;
     }
 
     public QuestionModel getQuestion() {

@@ -54,13 +54,13 @@ public class VoteController {
     @PostMapping("/submit-vote")
     public ResponseEntity<?> submitVote(HttpServletRequest request, @RequestBody Map<String, String> payload) {
         String answerId = payload.get("answerId");
-        String sessionId = CookieUtil.getDataFromCookie(request, "sessionId");
-        if (sessionId == null || sessionId.isEmpty()) {
+        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+        if (playerId == null || playerId.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "error submitting question", "message", "Session Id was not given"));
+                    .body(Map.of("error", "error submitting question", "message", "Player Id was not given"));
         }
         try {
-            PlayerModel player = fetchService.getPlayerBySessionId(sessionId);
+            PlayerModel player = fetchService.getPlayerById(playerId);
             AnswerModel answer = fetchService.getAnswerById(answerId);
             GameModel game = player.getGame();
             validationService.validatePlayer(player, game);
