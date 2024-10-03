@@ -23,6 +23,7 @@ import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.QuestionService;
 import com.brettstine.social_game_backend.service.ValidationService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
+import com.brettstine.social_game_backend.dto.QuestionDTO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -114,17 +115,17 @@ public class QuestionController {
         String playerId = CookieUtil.getDataFromCookie(request, "playerId");
         try {
             PlayerModel player = fetchService.getPlayerById(playerId);
-            List<QuestionModel> questions = questionService.getQuestionsForPlayer(player);
+            List<QuestionDTO> questionDTOs = questionService.getQuestionsForPlayer(player);
             logger.info("Successfully retrieved questions for player with id: {}", player.getPlayerId());
-            return ResponseEntity.ok(questions);
+            return ResponseEntity.ok(questionDTOs);
         } catch (IllegalArgumentException e) {
             logger.error("Error retrieving questions for player with id: {}", playerId, e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "error submitting question", "message", e.getMessage()));
+                    .body(Map.of("error", "error getting questions", "message", e.getMessage()));
         } catch (Exception e) {
             logger.error("Error retrieving questions for player with id: {}", playerId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "error submitting question", "message", e.getMessage()));
+                    .body(Map.of("error", "error getting questions", "message", e.getMessage()));
         }
     }
 

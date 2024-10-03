@@ -14,6 +14,7 @@ import com.brettstine.social_game_backend.model.VotingStatus;
 import com.brettstine.social_game_backend.repository.AnswerRepository;
 import com.brettstine.social_game_backend.repository.QuestionAssignmentRepository;
 import com.brettstine.social_game_backend.repository.QuestionRepository;
+import com.brettstine.social_game_backend.dto.QuestionDTO;
 
 @Service
 public class QuestionService {
@@ -48,9 +49,12 @@ public class QuestionService {
         return questionRepository.findByPlayer(player).orElseThrow(() -> new IllegalArgumentException("Question not found with player ID: " + player.getPlayerId()));
     }
 
-    public List<QuestionModel> getQuestionsForPlayer(PlayerModel player) {
+    public List<QuestionDTO> getQuestionsForPlayer(PlayerModel player) {
         List<QuestionModel> questions = questionAssignmentRepository.findQuestionsAssignedToPlayer(player);
-        return questions;
+        List<QuestionDTO> questionDTOs = questions.stream()
+                .map((question) -> new QuestionDTO(question.getContent(), question.getQuestionId(), question.getPlayer().getName()))
+                .collect(Collectors.toList());
+        return questionDTOs;
     }
 
     public void addQuestionForPlayer(GameModel game, PlayerModel player, QuestionModel question) {
