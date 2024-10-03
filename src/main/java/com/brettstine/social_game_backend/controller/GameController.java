@@ -87,7 +87,7 @@ public class GameController {
     }
 
     @GetMapping("/{gameId}/state")
-    public ResponseEntity<?> getGame(@PathVariable String gameId) {
+    public ResponseEntity<?> getGameState(@PathVariable String gameId) {
         try {
             GameModel game = gameService.getGameById(gameId);
             GameState gameState = gameService.getGameState(game);
@@ -95,7 +95,7 @@ public class GameController {
             return ResponseEntity.ok(Map.of("gameState", gameState));
         } catch (IllegalArgumentException e) {
             logger.error("Game: {} : Error executing getState", e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Could not get gameState", "message", e.getMessage()));
         } catch (Exception e) {
             logger.error("Game: {} : Error executing getState", e);

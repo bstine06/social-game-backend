@@ -44,6 +44,10 @@ public class PlayerModel {
     @JsonManagedReference
     private List<AnswerModel> answers;
 
+    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<QuestionAssignmentModel> questionAssignments;
+
     @Column(name = "score", nullable = false)
     private int score;
 

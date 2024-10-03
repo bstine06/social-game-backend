@@ -84,7 +84,7 @@ public class QuestionController {
         }
     }
 
-    @PostMapping("/submit-question")
+    @PostMapping
     public ResponseEntity<?> submitQuestion(HttpServletRequest request, @RequestBody Map<String, String> payload) {
         String gameId = payload.get("gameId");
         String questionContent = payload.get("question");

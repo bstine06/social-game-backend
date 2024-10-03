@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -91,6 +92,26 @@ public class PlayerController {
         } catch (Exception e) {
             logger.error("Error retrieving player with id: {}", playerId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "could not get player", "message", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deletePlayer(HttpServletRequest request, HttpServletResponse response) {
+        String playerId = CookieUtil.getDataFromCookie(request, "playerId");
+        try {
+            PlayerModel player = playerService.getPlayerById(playerId);
+            playerService.deletePlayerById(playerId);
+            logger.info("Game: {} : Successfully removed player with id: {}", player.getGameId(), playerId);
+            CookieUtil.deleteCookie(response, "playerId");
+            logger.info("Deleted player cookie with id: {}", playerId);
+            gameFlowService.terminateGameIfPlayerDeletionIsGameBreaking(player.getGame());
+            return ResponseEntity.ok(Map.of("success", "deleted player"));
+        } catch (IllegalArgumentException e) {
+            logger.error("error deleting player", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "could not delete player", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("error deleting player", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "could not delete player", "message", e.getMessage()));
         }
     }
 

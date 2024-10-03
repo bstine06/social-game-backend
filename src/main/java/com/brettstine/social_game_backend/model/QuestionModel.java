@@ -51,6 +51,10 @@ public class QuestionModel {
     @JsonManagedReference
     private List<AnswerModel> answers;
 
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<QuestionAssignmentModel> questionAssignments;
+
     @Column(name = "voting_status")
     private VotingStatus votingStatus;
 

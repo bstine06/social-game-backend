@@ -155,5 +155,11 @@ public class GameFlowService {
         logger.info("Incremented score for player: {}", player.getPlayerId());
     }
     
+    public void terminateGameIfPlayerDeletionIsGameBreaking(GameModel game) {
+        List<PlayerModel> players = playerService.getAllPlayersByGame(game);
+        if (players.size() < 3 && game.getGameState() != GameState.LOBBY) {
+            gameService.deleteGame(game.getGameId());
+        }
+    }
 }
 

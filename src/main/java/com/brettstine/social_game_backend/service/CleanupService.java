@@ -48,7 +48,7 @@ public class CleanupService {
     @Transactional
     public void cleanUp() {
         logger.info("Performing scheduled clean up:");
-        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(12); // Delete everything older than 12 hours.
+        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(1); // Delete everything older than 1 hours.
         // LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(3); // Use only for debugging
         try {
             // Get the IDs of games to be deleted

@@ -2,10 +2,14 @@ package com.brettstine.social_game_backend.service;
 
 import java.util.List;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.brettstine.social_game_backend.dto.AnswerDTO;
+import com.brettstine.social_game_backend.dto.BallotDTO;
+import com.brettstine.social_game_backend.dto.QuestionDTO;
 import com.brettstine.social_game_backend.model.AnswerModel;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerAnswerVoteModel;
@@ -41,7 +45,7 @@ public class VoteService {
     }
 
     public QuestionModel getOneUnvotedQuestionInGame(GameModel game) {
-        List<QuestionModel> questions = questionRepository.findByGameAndVotingStatus(game, VotingStatus.IN_PROGRESS);
+        List<QuestionModel> questions = questionRepository.findByGameAndVotingStatus(game, VotingStatus.NOT_VOTED);
 
         if (questions.isEmpty()) {
             return null;
@@ -58,6 +62,17 @@ public class VoteService {
         }
 
         return questions.get(0); // Assuming you want the first question.
+    }
+
+    public BallotDTO getCurrentBallot(GameModel game) {
+        QuestionModel question = getCurrentQuestion(game);
+        QuestionDTO questionDTO = new QuestionDTO(question.getContent(), question.getQuestionId(), question.getPlayer().getName());
+        List<AnswerModel> answers = question.getAnswers();
+        List<AnswerDTO> answerDTOs = answers.stream()
+                .map((answer) -> new AnswerDTO(answer.getContent(), answer.getAnswerId(), answer.getPlayer().getName()))
+                .collect(Collectors.toList());
+        BallotDTO ballotDTO = new BallotDTO(questionDTO, answerDTOs);
+        return ballotDTO;
     }
 
     public List<QuestionModel> getAllQuestions() {
