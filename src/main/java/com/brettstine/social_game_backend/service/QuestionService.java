@@ -49,9 +49,10 @@ public class QuestionService {
         return questionRepository.findByPlayer(player).orElseThrow(() -> new IllegalArgumentException("Question not found with player ID: " + player.getPlayerId()));
     }
 
-    public List<QuestionDTO> getQuestionsForPlayer(PlayerModel player) {
+    public List<QuestionDTO> getUnansweredQuestionsForPlayer(PlayerModel player, List<String> answeredQuestionIds) {
         List<QuestionModel> questions = questionAssignmentRepository.findQuestionsAssignedToPlayer(player);
         List<QuestionDTO> questionDTOs = questions.stream()
+                .filter(question -> !answeredQuestionIds.contains(question.getQuestionId()))
                 .map((question) -> new QuestionDTO(question.getContent(), question.getQuestionId(), question.getPlayer().getName()))
                 .collect(Collectors.toList());
         return questionDTOs;

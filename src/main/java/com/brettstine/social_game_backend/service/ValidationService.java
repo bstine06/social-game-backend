@@ -64,9 +64,13 @@ public class ValidationService {
     }
 
     public void validatePlayerHasNotAlreadyAnsweredQuestion(PlayerModel player, QuestionModel question) {
-        if (answerService.hasPlayerAnsweredQuestion(player, question)) {
+        if (hasPlayerAnsweredQuestion(player, question)) {
             throw new IllegalArgumentException("The player has already submitted an answer to this question");
         }
+    }
+
+    public boolean hasPlayerAnsweredQuestion(PlayerModel player, QuestionModel question) {
+        return answerService.hasPlayerAnsweredQuestion(player, question);
     }
 
     public void ensureGameState(GameModel game, GameState requiredState) {

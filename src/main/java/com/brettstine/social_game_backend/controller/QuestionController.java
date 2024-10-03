@@ -2,6 +2,7 @@ package com.brettstine.social_game_backend.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -115,7 +116,10 @@ public class QuestionController {
         String playerId = CookieUtil.getDataFromCookie(request, "playerId");
         try {
             PlayerModel player = fetchService.getPlayerById(playerId);
-            List<QuestionDTO> questionDTOs = questionService.getQuestionsForPlayer(player);
+            List<String> answeredQuestionIds = player.getAnswers().stream()
+                    .map((answer) -> answer.getQuestionId())
+                    .collect(Collectors.toList());
+            List<QuestionDTO> questionDTOs = questionService.getUnansweredQuestionsForPlayer(player, answeredQuestionIds);
             logger.info("Successfully retrieved questions for player with id: {}", player.getPlayerId());
             return ResponseEntity.ok(questionDTOs);
         } catch (IllegalArgumentException e) {
