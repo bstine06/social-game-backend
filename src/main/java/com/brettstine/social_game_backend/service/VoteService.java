@@ -1,6 +1,7 @@
 package com.brettstine.social_game_backend.service;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.brettstine.social_game_backend.dto.AnswerDTO;
 import com.brettstine.social_game_backend.dto.BallotDTO;
 import com.brettstine.social_game_backend.dto.QuestionDTO;
+import com.brettstine.social_game_backend.dto.VoteDTO;
 import com.brettstine.social_game_backend.model.AnswerModel;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerAnswerVoteModel;
@@ -73,6 +75,22 @@ public class VoteService {
                 .collect(Collectors.toList());
         BallotDTO ballotDTO = new BallotDTO(questionDTO, answerDTOs);
         return ballotDTO;
+    }
+
+    public List<VoteDTO> getCurrentBallotVotes(GameModel game) {
+        QuestionModel question = getCurrentQuestion(game);
+        List<AnswerModel> answers = question.getAnswers();
+        List<PlayerAnswerVoteModel> allPlayerAnswerVotes = new ArrayList<>();
+        answers.stream()
+                .forEach((answer) -> {
+                    allPlayerAnswerVotes.addAll(playerAnswerVoteRepository.findAllByAnswer(answer));
+                });
+        List<VoteDTO> votes = allPlayerAnswerVotes.stream()
+                .map((playerAnswerVote) -> {
+                    return new VoteDTO(playerAnswerVote.getPlayerId(), playerAnswerVote.getPlayer().getName(), playerAnswerVote.getAnswerId());
+                })
+                .collect(Collectors.toList());
+        return votes;
     }
 
     public List<QuestionModel> getAllQuestions() {

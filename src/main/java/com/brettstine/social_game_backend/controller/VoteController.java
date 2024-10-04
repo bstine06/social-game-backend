@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.brettstine.social_game_backend.dto.BallotDTO;
+import com.brettstine.social_game_backend.dto.VoteDTO;
 import com.brettstine.social_game_backend.model.AnswerModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
 import com.brettstine.social_game_backend.model.VotingStatus;
@@ -115,6 +116,23 @@ public class VoteController {
             logger.error("Game: {} : Error retreiving current ballot", gameId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "error retreiving current ballot", "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{gameId}/get-current-ballot-votes")
+    public ResponseEntity<?> getCurrentBallotVotes(@PathVariable String gameId) {
+        try {
+            GameModel game = fetchService.getGameById(gameId);
+            List<VoteDTO> voteDTOs = voteService.getCurrentBallotVotes(game); 
+            return ResponseEntity.ok(voteDTOs);
+        } catch (IllegalStateException e) {
+            logger.error("Game: {} : Error retreiving votes", gameId, e);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "error retreiving votes", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Game: {} : Error retreiving votes", gameId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "error retreiving votes", "message", e.getMessage()));
         }
     }
 
