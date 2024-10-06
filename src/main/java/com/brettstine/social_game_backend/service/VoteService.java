@@ -71,7 +71,7 @@ public class VoteService {
         QuestionDTO questionDTO = new QuestionDTO(question.getContent(), question.getQuestionId(), question.getPlayer().getName());
         List<AnswerModel> answers = question.getAnswers();
         List<AnswerDTO> answerDTOs = answers.stream()
-                .map((answer) -> new AnswerDTO(answer.getContent(), answer.getAnswerId(), answer.getPlayer().getName()))
+                .map((answer) -> new AnswerDTO(answer.getContent(), answer.getAnswerId(), answer.getPlayerId(), answer.getPlayer().getName()))
                 .collect(Collectors.toList());
         BallotDTO ballotDTO = new BallotDTO(questionDTO, answerDTOs);
         return ballotDTO;
