@@ -59,6 +59,8 @@ public class GameService {
         }
         logger.info("Deleting game record with id: {}", gameId);
         gameRepository.deleteById(gameId);
+        // Close WebSocket connections related to the game
+        gameStateWebSocketHandler.closeConnectionsByGameId(gameId);
     }
 
     @Transactional

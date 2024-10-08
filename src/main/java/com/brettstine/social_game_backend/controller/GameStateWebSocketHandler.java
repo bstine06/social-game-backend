@@ -68,4 +68,18 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
 
         return query.split("=")[1]; // Extracting the gameId assuming the query is like ?gameId=1234
     }
+
+    public void closeConnectionsByGameId(String gameId) {
+        List<WebSocketSession> sessions = gameSessionsMap.remove(gameId); // Get and remove the sessions for the gameId
+        if (sessions != null) {
+            for (WebSocketSession session : sessions) {
+                try {
+                    session.close(CloseStatus.NORMAL); // Close the session gracefully
+                } catch (IOException e) {
+                    // Handle potential IOException during session close
+                    e.printStackTrace();
+                }
+            }
+        }
+    }    
 }
