@@ -9,11 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.brettstine.social_game_backend.controller.GameStateWebSocketHandler;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.repository.GameRepository;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.utils.GameCodeGenerator;
+import com.brettstine.social_game_backend.websocket.GameStateWebSocketHandler;
 
 import jakarta.transaction.Transactional;
 

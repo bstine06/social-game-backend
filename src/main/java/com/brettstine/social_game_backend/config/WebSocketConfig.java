@@ -8,7 +8,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
-import com.brettstine.social_game_backend.controller.GameStateWebSocketHandler;
+import com.brettstine.social_game_backend.websocket.GameStateWebSocketHandler;
 
 @Configuration
 @EnableWebSocket

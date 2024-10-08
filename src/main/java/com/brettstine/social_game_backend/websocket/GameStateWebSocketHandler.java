@@ -1,4 +1,4 @@
-package com.brettstine.social_game_backend.controller;
+package com.brettstine.social_game_backend.websocket;
 
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
