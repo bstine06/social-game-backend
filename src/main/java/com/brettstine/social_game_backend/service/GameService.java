@@ -1,6 +1,7 @@
 package com.brettstine.social_game_backend.service;
 
 import java.util.List;
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 import org.hibernate.Hibernate;
@@ -8,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.brettstine.social_game_backend.controller.GameStateWebSocketHandler;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.repository.GameRepository;
 import com.brettstine.social_game_backend.model.GameState;
@@ -21,9 +23,11 @@ public class GameService {
     private static final Logger logger = LoggerFactory.getLogger(GameService.class);
 
     private final GameRepository gameRepository;
+    private final GameStateWebSocketHandler gameStateWebSocketHandler;
 
-    public GameService(GameRepository gameRepository) {
+    public GameService(GameRepository gameRepository, GameStateWebSocketHandler gameStateWebSocketHandler) {
         this.gameRepository = gameRepository;
+        this.gameStateWebSocketHandler = gameStateWebSocketHandler;
     }
 
     public GameModel createGame() {
@@ -66,14 +70,21 @@ public class GameService {
 
     @Transactional
     public GameModel getGameByHostId(String hostId) {
-        GameModel game = gameRepository.findByHostId(hostId).orElseThrow(() -> new IllegalArgumentException("No game found with host ID: " + hostId));
+        GameModel game = gameRepository.findByHostId(hostId)
+                .orElseThrow(() -> new IllegalArgumentException("No game found with host ID: " + hostId));
         Hibernate.initialize(game.getPlayers());
         return game;
     }
 
     public GameModel setGameState(GameModel game, GameState gameState) {
         game.setGameState(gameState);
-        return gameRepository.save(game);
+        GameModel savedGame = gameRepository.save(game);
+        try {
+            gameStateWebSocketHandler.broadcastGameState(savedGame.getGameId(), savedGame.getGameState().toString());
+        } catch (IOException e) {
+            logger.error("GAME: {} : Error broadcasting game state", savedGame.getGameId(), e);
+        }
+        return savedGame;
     }
 
     public GameState getGameState(GameModel game) {
