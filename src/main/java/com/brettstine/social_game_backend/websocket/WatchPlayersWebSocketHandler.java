@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.brettstine.social_game_backend.repository.GameRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -21,7 +22,7 @@ import org.slf4j.LoggerFactory;
 @Component
 public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(GameStateWebSocketHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(WatchPlayersWebSocketHandler.class);
 
     // This object allows serializing the list of players to JSON
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -29,9 +30,23 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
     // Store active WebSocket sessions by gameId
     private final Map<String, List<WebSocketSession>> gameSessionsMap = new ConcurrentHashMap<>();
 
+    private final GameRepository gameRepository;
+
+    public WatchPlayersWebSocketHandler(GameRepository gameRepository) {
+        this.gameRepository = gameRepository;
+    }
+
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         String gameId = getGameIdFromSession(session);
+
+        // Check if the game exists directly using GameRepository
+        if (!gameRepository.existsById(gameId)) {
+            logger.warn("Invalid gameId: {}. Closing WebSocket connection.", gameId);
+            session.close(CloseStatus.BAD_DATA);
+            return;
+        }
+
         // Store the session under the gameId
         gameSessionsMap.computeIfAbsent(gameId, k -> new ArrayList<>()).add(session);
         logger.info("WatchPlayers WebSocket connection established for gameId: {}", gameId); // Log when a connection is established
@@ -84,7 +99,7 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
                     session.close(CloseStatus.NORMAL); // Close the session gracefully
                     logger.info("Closed WatchPlayers WebSocket connection for gameId: {}", gameId); // Log when a connection is closed
                 } catch (IOException e) {
-                    e.printStackTrace(); // Handle potential IOException during session close
+                    logger.error("Error while closing websocket connection for game id: {}", gameId, e);
                 }
             }
         }
