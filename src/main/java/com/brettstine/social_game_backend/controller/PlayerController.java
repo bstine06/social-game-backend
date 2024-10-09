@@ -66,6 +66,9 @@ public class PlayerController {
             CookieUtil.setHttpCookie(response, "playerId", playerId, 3600);;
             logger.info("Player cookie set with ID: {}", playerId);
 
+            // websocket broadcast update
+            gameFlowService.broadcastPlayersList(game);
+
             return ResponseEntity.ok(player);
         } catch (IllegalArgumentException e) {
             logger.error("Error creating player", e);
@@ -104,6 +107,10 @@ public class PlayerController {
             logger.info("Game: {} : Successfully removed player with id: {}", player.getGameId(), playerId);
             CookieUtil.deleteCookie(response, "playerId");
             logger.info("Deleted player cookie with id: {}", playerId);
+
+            // websocket broadcast update
+            gameFlowService.broadcastPlayersList(player.getGame());
+
             gameFlowService.terminateGameIfPlayerDeletionIsGameBreaking(player.getGame());
             return ResponseEntity.ok(Map.of("success", "deleted player"));
         } catch (IllegalArgumentException e) {

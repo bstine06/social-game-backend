@@ -74,6 +74,9 @@ public class GameController {
             String hostId = CookieUtil.getDataFromCookie(request, "hostId");
             CookieUtil.deleteCookie(response, "hostId");
             logger.info("Deleted host cookie with id: {}", hostId);
+
+            gameFlowService.closeWebsocketsOnGameDeletion(gameId);
+
             return ResponseEntity.ok(Map.of("message", "Successfully deleted game", "gameId", gameId));
         } catch (IllegalArgumentException e) {
             logger.error("Game: {} : Error deleting game", gameId, e);
@@ -110,6 +113,10 @@ public class GameController {
             GameModel game = gameService.getGameById(gameId);
             gameFlowService.tryAdvanceGameState(game);
             // log successful game state advancement inside of gameFlowService
+
+            // websocket broadcast change
+            gameFlowService.broadcastGameState(game);
+
             return ResponseEntity.ok(game);
         } catch (IllegalArgumentException e) {
             logger.error("Game: {} : Error advancing state", gameId, e);

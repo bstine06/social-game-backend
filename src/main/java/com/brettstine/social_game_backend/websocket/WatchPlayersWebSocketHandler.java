@@ -10,6 +10,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.brettstine.social_game_backend.repository.GameRepository;
 import com.brettstine.social_game_backend.repository.PlayerRepository;
+import com.brettstine.social_game_backend.service.GameService;
+import com.brettstine.social_game_backend.service.PlayerService;
+import com.brettstine.social_game_backend.dto.PlayerDTO;
+import com.brettstine.social_game_backend.dto.WatchPlayersDTO;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,12 +40,12 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
     // Store active WebSocket sessions by gameId
     private final Map<String, List<WebSocketSession>> gameSessionsMap = new ConcurrentHashMap<>();
 
-    private final GameRepository gameRepository;
-    private final PlayerRepository playerRepository;
+    private final GameService gameService;
+    private final PlayerService playerService;
 
-    public WatchPlayersWebSocketHandler(GameRepository gameRepository, PlayerRepository playerRepository) {
-        this.gameRepository = gameRepository;
-        this.playerRepository = playerRepository;
+    public WatchPlayersWebSocketHandler(GameService gameService, PlayerService playerService) {
+        this.gameService = gameService;
+        this.playerService = playerService;
     }
 
     @Override
@@ -49,19 +53,14 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
         String gameId = getGameIdFromSession(session);
         try {
             // Attempt to retrieve the game with the provided ID
-            GameModel game = gameRepository.findById(gameId)
-                    .orElseThrow(() -> new IllegalArgumentException("Game not found with ID: " + gameId));
+            GameModel game = gameService.getGameById(gameId);
             
             // Store the websocket session under the gameId
             gameSessionsMap.computeIfAbsent(gameId, k -> new ArrayList<>()).add(session);
             logger.info("WatchPlayers WebSocket connection established for gameId: {}", gameId);
             
             // Immediately send the players' names list as soon as websocket is created
-            List<PlayerModel> players = playerRepository.findByGame(game);
-            List<String> playerNames = players.stream()
-                    .map(p -> p.getName())
-                    .collect(Collectors.toList());
-            broadcastPlayersList(gameId, playerNames);
+            broadcastPlayersList(game);
         } catch (IllegalArgumentException e) {
             logger.warn("Invalid gameId: {}. Closing WebSocket connection.", gameId);
             session.close(CloseStatus.BAD_DATA);
@@ -81,16 +80,25 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
     }
 
     // Method to broadcast player list to a specific game
-    public void broadcastPlayersList(String gameId, List<String> playerNames) throws IOException {
-        List<WebSocketSession> sessions = gameSessionsMap.getOrDefault(gameId, new ArrayList<>());
-        String message = objectMapper.writeValueAsString(playerNames);  // Convert list to JSON
-        logger.info("WatchPlayers WebSocket: broadcasting players for gameId: {}", gameId);
+    public void broadcastPlayersList(GameModel game) throws IOException {
+        List<PlayerModel> playersInGame = playerService.getAllPlayersByGame(game);
+        WatchPlayersDTO watchPlayersDTO = new WatchPlayersDTO();
+        playersInGame.stream()
+                .forEach(p -> {
+                    boolean readyStatus = p.isReady();
+                    watchPlayersDTO.addPlayer(new PlayerDTO(p), readyStatus);
+                });
+        List<WebSocketSession> sessions = gameSessionsMap.getOrDefault(game.getGameId(), new ArrayList<>());
+        String message = objectMapper.writeValueAsString(watchPlayersDTO);  // Convert list to JSON
+        logger.info("WatchPlayers WebSocket: broadcasting players for gameId: {}", game.getGameId());
         for (WebSocketSession session : sessions) {
             if (session.isOpen()) {
                 session.sendMessage(new TextMessage(message));
             }
         }
     }
+
+
 
     // Helper method to extract the gameId from the WebSocket session’s URL
     private String getGameIdFromSession(WebSocketSession session) {

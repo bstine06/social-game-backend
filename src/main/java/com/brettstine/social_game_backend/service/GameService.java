@@ -23,11 +23,9 @@ public class GameService {
     private static final Logger logger = LoggerFactory.getLogger(GameService.class);
 
     private final GameRepository gameRepository;
-    private final GameStateWebSocketHandler gameStateWebSocketHandler;
 
-    public GameService(GameRepository gameRepository, GameStateWebSocketHandler gameStateWebSocketHandler) {
+    public GameService(GameRepository gameRepository) {
         this.gameRepository = gameRepository;
-        this.gameStateWebSocketHandler = gameStateWebSocketHandler;
     }
 
     public GameModel createGame() {
@@ -59,8 +57,6 @@ public class GameService {
         }
         logger.info("Deleting game record with id: {}", gameId);
         gameRepository.deleteById(gameId);
-        // Close WebSocket connections related to the game
-        gameStateWebSocketHandler.closeConnectionsByGameId(gameId);
     }
 
     @Transactional
@@ -81,11 +77,6 @@ public class GameService {
     public GameModel setGameState(GameModel game, GameState gameState) {
         game.setGameState(gameState);
         GameModel savedGame = gameRepository.save(game);
-        try {
-            gameStateWebSocketHandler.broadcastGameState(savedGame.getGameId(), savedGame.getGameState().toString());
-        } catch (IOException e) {
-            logger.error("GAME: {} : Error broadcasting game state", savedGame.getGameId(), e);
-        }
         return savedGame;
     }
 

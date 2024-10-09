@@ -11,6 +11,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.repository.GameRepository;
+import com.brettstine.social_game_backend.service.GameService;
 
 import java.io.IOException;
 import java.net.URI;
@@ -28,10 +29,10 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
     // Store active WebSocket sessions by gameId
     private final Map<String, List<WebSocketSession>> gameSessionsMap = new ConcurrentHashMap<>();
 
-    private final GameRepository gameRepository;
+    private final GameService gameService;
 
-    public GameStateWebSocketHandler(GameRepository gameRepository) {
-        this.gameRepository = gameRepository;
+    public GameStateWebSocketHandler(GameService gameService) {
+        this.gameService = gameService;
     }
 
     @Override
@@ -39,15 +40,14 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
         String gameId = getGameIdFromSession(session);
         try {
             // Attempt to retrieve the game with the provided ID
-            GameModel game = gameRepository.findById(gameId)
-                    .orElseThrow(() -> new IllegalArgumentException("Game not found with ID: " + gameId));
+            GameModel game = gameService.getGameById(gameId);
             
             // Store the websocket session under the gameId
             gameSessionsMap.computeIfAbsent(gameId, k -> new ArrayList<>()).add(session);
             logger.info("GameState WebSocket connection established for gameId: {}", gameId);
             
             // Immediately send the gamestate as soon as websocket is created
-            broadcastGameState(gameId, game.getGameState().toString());
+            broadcastGameState(game);
         } catch (IllegalArgumentException e) {
             logger.warn("Invalid gameId: {}. Closing WebSocket connection.", gameId);
             session.close(CloseStatus.BAD_DATA);
@@ -67,11 +67,11 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
     }
 
     // Method to broadcast updates to a specific game
-    public void broadcastGameState(String gameId, String gameState) throws IOException {
-        List<WebSocketSession> sessions = gameSessionsMap.getOrDefault(gameId, new ArrayList<>());
+    public void broadcastGameState(GameModel game) throws IOException {
+        List<WebSocketSession> sessions = gameSessionsMap.getOrDefault(game.getGameId(), new ArrayList<>());
         for (WebSocketSession session : sessions) {
             if (session.isOpen()) {
-                session.sendMessage(new TextMessage(gameState));
+                session.sendMessage(new TextMessage(game.getGameState().toString()));
             }
         }
     }

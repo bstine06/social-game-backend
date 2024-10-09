@@ -98,6 +98,7 @@ public class QuestionController {
             validationService.validatePlayerCanSubmitQuestion(player);
             QuestionModel question = questionService.submitQuestion(game, player, questionContent);
             logger.info("Game: {} : Successfully submitted question with id: {}", gameId, question.getQuestionId());
+            gameFlowService.setPlayerReady(player, true);
             gameFlowService.tryAdvanceGameState(game);
             return ResponseEntity.ok(question);
         } catch (IllegalArgumentException e) {

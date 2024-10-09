@@ -36,6 +36,9 @@ public class PlayerModel {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "ready", nullable = false)
+    private boolean ready;
+
     @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private QuestionModel question;
@@ -68,6 +71,7 @@ public class PlayerModel {
         this.name = name;
         this.creationTime = LocalDateTime.now();
         this.score = 0;
+        this.ready = true;
     }
 
     // Getters and Setters
@@ -90,6 +94,14 @@ public class PlayerModel {
 
     public String getName() {
         return name;
+    }
+
+    public boolean isReady() {
+        return ready;
+    }
+
+    public void setReady(boolean ready) {
+        this.ready = ready;
     }
 
     public QuestionModel getQuestion() {

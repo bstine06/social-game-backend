@@ -19,21 +19,14 @@ public class PlayerService {
     private static final Logger logger = LoggerFactory.getLogger(PlayerService.class);
 
     private final PlayerRepository playerRepository;
-    private final WatchPlayersWebSocketHandler watchPlayersWebSocketHandler;
 
-    public PlayerService(PlayerRepository playerRepository, WatchPlayersWebSocketHandler watchPlayersWebSocketHandler) {
+    public PlayerService(PlayerRepository playerRepository) {
         this.playerRepository = playerRepository;
-        this.watchPlayersWebSocketHandler = watchPlayersWebSocketHandler;
     }
 
     public PlayerModel createPlayer(GameModel game, String name) {
         PlayerModel player = new PlayerModel(game, name);
         player = playerRepository.save(player);
-
-        // Manually add the new player to the game's list of players for broadcast
-        game.getPlayers().add(player); 
-
-        broadcastPlayersList(game);
         return player;
     }
 
@@ -42,15 +35,19 @@ public class PlayerService {
     }
 
     public void deletePlayerById(String playerId) {
-        PlayerModel player = getPlayerById(playerId);
         playerRepository.deleteById(playerId);
-        broadcastPlayersList(player.getGame());
     }
 
     public PlayerModel setName(String playerId, String name) {
         PlayerModel player = getPlayerById(playerId);
         player.setName(name);
         return playerRepository.save(player);
+    }
+
+    public void setReady(String playerId, boolean ready) {
+        PlayerModel player = getPlayerById(playerId);
+        player.setReady(ready);
+        playerRepository.save(player);
     }
 
     public List<PlayerModel> getAllPlayersByGame(GameModel game) {
@@ -69,14 +66,12 @@ public class PlayerService {
         playerRepository.save(player);
     }
 
-    private void broadcastPlayersList(GameModel game) {
-        List<String> playerNames = game.getPlayers().stream()
-                .map(p -> p.getName())
-                .collect(Collectors.toList());
-        try {
-            watchPlayersWebSocketHandler.broadcastPlayersList(game.getGameId(), playerNames);
-        } catch (IOException e) {
-            logger.error("GAME: {} : Error broadcasting players list", game.getGameId(), e);
-        }
+    public void unreadyAllPlayersInGame(GameModel game) {
+        List<PlayerModel> players = getAllPlayersByGame(game);
+        players.stream()
+                .forEach(p -> {
+                    p.setReady(false);
+                    playerRepository.save(p);
+                });
     }
 }

@@ -118,6 +118,9 @@ public class AnswerController {
             validationService.validatePlayerCanAnswerThisQuestion(player, question);
             AnswerModel answer = answerService.submitAnswer(game, player, question, answerContent);
             logger.info("Game: {} : Successfully submitted answer with id: {}", gameId, answer.getAnswerId());
+            if (!validationService.doesPlayerHaveUnansweredQuestions(player)) {
+                gameFlowService.setPlayerReady(player, true);
+            }
             gameFlowService.tryAdvanceGameState(game);
             return ResponseEntity.ok(answer);
         } catch (IllegalArgumentException e) {

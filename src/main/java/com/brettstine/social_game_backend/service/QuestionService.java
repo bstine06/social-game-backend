@@ -30,7 +30,8 @@ public class QuestionService {
 
     public QuestionModel submitQuestion(GameModel game, PlayerModel player, String content) {
         QuestionModel question = new QuestionModel(game, player, content);
-        return questionRepository.save(question);
+        question = questionRepository.save(question);
+        return question;
     }
 
     public boolean hasSubmittedQuestion(PlayerModel player) {
