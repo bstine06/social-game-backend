@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.brettstine.social_game_backend.model.GameModel;
+import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.repository.GameRepository;
 
 import java.io.IOException;
@@ -35,17 +37,21 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         String gameId = getGameIdFromSession(session);
-
-        // Check if the game exists directly using GameRepository
-        if (!gameRepository.existsById(gameId)) {
+        try {
+            // Attempt to retrieve the game with the provided ID
+            GameModel game = gameRepository.findById(gameId)
+                    .orElseThrow(() -> new IllegalArgumentException("Game not found with ID: " + gameId));
+            
+            // Store the websocket session under the gameId
+            gameSessionsMap.computeIfAbsent(gameId, k -> new ArrayList<>()).add(session);
+            logger.info("GameState WebSocket connection established for gameId: {}", gameId);
+            
+            // Immediately send the gamestate as soon as websocket is created
+            broadcastGameState(gameId, game.getGameState().toString());
+        } catch (IllegalArgumentException e) {
             logger.warn("Invalid gameId: {}. Closing WebSocket connection.", gameId);
             session.close(CloseStatus.BAD_DATA);
-            return;
         }
-
-        // Store the session under the gameId
-        gameSessionsMap.computeIfAbsent(gameId, k -> new ArrayList<>()).add(session);
-        logger.info("WebSocket connection established for gameId: {}", gameId); // Log when a connection is established
     }
 
     @Override
