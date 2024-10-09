@@ -90,7 +90,8 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
         if (sessions != null) {
             for (WebSocketSession session : sessions) {
                 try {
-                    session.close(CloseStatus.NORMAL); // Close the session gracefully
+                    CloseStatus closeStatus = new CloseStatus(4000, "Game " + gameId + " was deleted.");  // Custom close code and reason
+                    session.close(closeStatus);
                     logger.info("Closed WebSocket connection for gameId: {}", gameId); // Log when a connection is closed
                 } catch (IOException e) {
                     logger.error("Error while closing websocket connection for game id: {}", gameId, e);

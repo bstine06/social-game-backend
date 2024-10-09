@@ -15,7 +15,7 @@ import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.utils.GameCodeGenerator;
 import com.brettstine.social_game_backend.websocket.GameStateWebSocketHandler;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GameService {

@@ -9,11 +9,17 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.brettstine.social_game_backend.repository.GameRepository;
+import com.brettstine.social_game_backend.repository.PlayerRepository;
+import com.brettstine.social_game_backend.model.GameModel;
+import com.brettstine.social_game_backend.model.PlayerModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -31,25 +37,35 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
     private final Map<String, List<WebSocketSession>> gameSessionsMap = new ConcurrentHashMap<>();
 
     private final GameRepository gameRepository;
+    private final PlayerRepository playerRepository;
 
-    public WatchPlayersWebSocketHandler(GameRepository gameRepository) {
+    public WatchPlayersWebSocketHandler(GameRepository gameRepository, PlayerRepository playerRepository) {
         this.gameRepository = gameRepository;
+        this.playerRepository = playerRepository;
     }
 
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         String gameId = getGameIdFromSession(session);
-
-        // Check if the game exists directly using GameRepository
-        if (!gameRepository.existsById(gameId)) {
+        try {
+            // Attempt to retrieve the game with the provided ID
+            GameModel game = gameRepository.findById(gameId)
+                    .orElseThrow(() -> new IllegalArgumentException("Game not found with ID: " + gameId));
+            
+            // Store the websocket session under the gameId
+            gameSessionsMap.computeIfAbsent(gameId, k -> new ArrayList<>()).add(session);
+            logger.info("WatchPlayers WebSocket connection established for gameId: {}", gameId);
+            
+            // Immediately send the players' names list as soon as websocket is created
+            List<PlayerModel> players = playerRepository.findByGame(game);
+            List<String> playerNames = players.stream()
+                    .map(p -> p.getName())
+                    .collect(Collectors.toList());
+            broadcastPlayersList(gameId, playerNames);
+        } catch (IllegalArgumentException e) {
             logger.warn("Invalid gameId: {}. Closing WebSocket connection.", gameId);
             session.close(CloseStatus.BAD_DATA);
-            return;
         }
-
-        // Store the session under the gameId
-        gameSessionsMap.computeIfAbsent(gameId, k -> new ArrayList<>()).add(session);
-        logger.info("WatchPlayers WebSocket connection established for gameId: {}", gameId); // Log when a connection is established
     }
 
     @Override
