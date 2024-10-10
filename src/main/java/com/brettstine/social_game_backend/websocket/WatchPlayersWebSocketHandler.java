@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.brettstine.social_game_backend.repository.GameRepository;
-import com.brettstine.social_game_backend.repository.PlayerRepository;
 import com.brettstine.social_game_backend.service.GameService;
 import com.brettstine.social_game_backend.service.PlayerService;
 import com.brettstine.social_game_backend.dto.PlayerDTO;
@@ -20,7 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Map;
+import java.util.Map; 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;

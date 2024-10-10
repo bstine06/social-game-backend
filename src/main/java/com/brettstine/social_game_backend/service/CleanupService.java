@@ -10,6 +10,8 @@ import com.brettstine.social_game_backend.repository.PlayerAnswerVoteRepository;
 import com.brettstine.social_game_backend.repository.PlayerRepository;
 import com.brettstine.social_game_backend.repository.QuestionAssignmentRepository;
 import com.brettstine.social_game_backend.repository.QuestionRepository;
+import com.brettstine.social_game_backend.websocket.GameStateWebSocketHandler;
+import com.brettstine.social_game_backend.websocket.WatchPlayersWebSocketHandler;
 import com.brettstine.social_game_backend.model.GameModel;
 
 import java.time.LocalDateTime;
@@ -29,18 +31,24 @@ public class CleanupService {
     private final AnswerRepository answerRepository;
     private final QuestionAssignmentRepository questionAssignmentRepository;
     private final PlayerAnswerVoteRepository playerAnswerVoteRepository;
+    private final GameStateWebSocketHandler gameStateWebSocketHandler;
+    private final WatchPlayersWebSocketHandler watchPlayersWebSocketHandler;
 
     public CleanupService(GameRepository gameRepository, PlayerRepository playerRepository,
             QuestionRepository questionRepository,
             AnswerRepository answerRepository,
             QuestionAssignmentRepository questionAssignmentRepository,
-            PlayerAnswerVoteRepository playerAnswerVoteRepository) {
+            PlayerAnswerVoteRepository playerAnswerVoteRepository,
+            GameStateWebSocketHandler gameStateWebSocketHandler,
+            WatchPlayersWebSocketHandler watchPlayersWebSocketHandler) {
         this.gameRepository = gameRepository;
         this.playerRepository = playerRepository;
         this.questionRepository = questionRepository;
         this.answerRepository = answerRepository;
         this.questionAssignmentRepository = questionAssignmentRepository;
         this.playerAnswerVoteRepository = playerAnswerVoteRepository;
+        this.gameStateWebSocketHandler = gameStateWebSocketHandler;
+        this.watchPlayersWebSocketHandler = watchPlayersWebSocketHandler;
     }
 
     // Runs every hour (can adjust the cron expression if needed)
@@ -48,7 +56,7 @@ public class CleanupService {
     @Transactional
     public void cleanUp() {
         logger.info("Performing scheduled clean up:");
-        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(12); // Delete everything older than 12 hours.
+        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(1); // Delete everything older than 1 hours.
         // LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(3); // Use only for debugging
         try {
             // Get the IDs of games to be deleted
@@ -71,6 +79,12 @@ public class CleanupService {
                         .toList();
                 
                 logger.info("Clean up: deleted associated records for games with IDs: {}", oldGameIds);
+
+                oldGameIds.stream().forEach(gameId -> {
+                    watchPlayersWebSocketHandler.closeConnectionsByGameId(gameId);
+                    gameStateWebSocketHandler.closeConnectionsByGameId(gameId);
+                });
+
             } else {
                 logger.info("No old games found for deletion.");
             }

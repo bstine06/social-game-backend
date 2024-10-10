@@ -71,7 +71,7 @@ public class PlayerModel {
         this.name = name;
         this.creationTime = LocalDateTime.now();
         this.score = 0;
-        this.ready = true;
+        this.ready = false;
     }
 
     // Getters and Setters

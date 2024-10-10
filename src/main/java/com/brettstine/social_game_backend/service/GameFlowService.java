@@ -73,6 +73,7 @@ public class GameFlowService {
 
     public void setPlayerReady(PlayerModel player, boolean ready) {
         playerService.setReady(player.getPlayerId(), ready);
+        broadcastPlayersList(player.getGame());
     }
 
     public void broadcastPlayersList(GameModel game) {
