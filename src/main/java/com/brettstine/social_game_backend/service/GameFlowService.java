@@ -98,6 +98,7 @@ public class GameFlowService {
         playerService.unreadyAllPlayersInGame(game);
         gameService.setGameState(game, gameState);
         broadcastGameState(game);
+        broadcastPlayersList(game);
     }
 
     // method to advance game state only when certain conditions are met
@@ -202,6 +203,7 @@ public class GameFlowService {
         List<PlayerModel> players = playerService.getAllPlayersByGame(game);
         if (players.size() < 3 && game.getGameState() != GameState.LOBBY) {
             gameService.deleteGame(game.getGameId());
+            closeWebsocketsOnGameDeletion(game.getGameId());
         }
     }
 }
