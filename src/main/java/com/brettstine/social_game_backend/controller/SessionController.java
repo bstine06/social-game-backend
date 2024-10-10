@@ -9,10 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import com.brettstine.social_game_backend.model.GameModel;
-import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 

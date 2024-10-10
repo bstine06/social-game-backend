@@ -20,11 +20,9 @@ import com.brettstine.social_game_backend.dto.BallotDTO;
 import com.brettstine.social_game_backend.dto.VoteDTO;
 import com.brettstine.social_game_backend.model.AnswerModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
-import com.brettstine.social_game_backend.model.VotingStatus;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.PlayerModel;
-import com.brettstine.social_game_backend.model.QuestionModel;
 import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.ValidationService;
@@ -32,7 +30,6 @@ import com.brettstine.social_game_backend.service.VoteService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.core.Response;
 
 @RestController
 @CrossOrigin(origins = "${frontend.url}", allowCredentials = "true")

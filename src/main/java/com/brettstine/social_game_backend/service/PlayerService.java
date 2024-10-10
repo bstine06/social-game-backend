@@ -3,20 +3,13 @@ package com.brettstine.social_game_backend.service;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.repository.PlayerRepository;
-import com.brettstine.social_game_backend.websocket.WatchPlayersWebSocketHandler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class PlayerService {
-
-    private static final Logger logger = LoggerFactory.getLogger(PlayerService.class);
 
     private final PlayerRepository playerRepository;
 

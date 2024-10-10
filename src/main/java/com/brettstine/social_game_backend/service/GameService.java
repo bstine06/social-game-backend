@@ -1,7 +1,6 @@
 package com.brettstine.social_game_backend.service;
 
 import java.util.List;
-import java.io.IOException;
 import java.time.LocalDateTime;
 
 import org.hibernate.Hibernate;
@@ -13,7 +12,6 @@ import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.repository.GameRepository;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.utils.GameCodeGenerator;
-import com.brettstine.social_game_backend.websocket.GameStateWebSocketHandler;
 
 import org.springframework.transaction.annotation.Transactional;
 

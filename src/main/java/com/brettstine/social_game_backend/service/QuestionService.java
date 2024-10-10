@@ -5,13 +5,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.brettstine.social_game_backend.model.AnswerModel;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.model.QuestionAssignmentModel;
 import com.brettstine.social_game_backend.model.QuestionModel;
-import com.brettstine.social_game_backend.model.VotingStatus;
-import com.brettstine.social_game_backend.repository.AnswerRepository;
 import com.brettstine.social_game_backend.repository.QuestionAssignmentRepository;
 import com.brettstine.social_game_backend.repository.QuestionRepository;
 import com.brettstine.social_game_backend.dto.QuestionDTO;

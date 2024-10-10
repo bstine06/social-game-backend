@@ -12,17 +12,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import com.brettstine.social_game_backend.model.GameModel;
-import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.GameService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -40,12 +36,10 @@ public class GameController {
 
     private final GameService gameService;
     private final GameFlowService gameFlowService;
-    private final FetchService fetchService;
 
-    public GameController(GameService gameService, GameFlowService gameFlowService, FetchService fetchService) {
+    public GameController(GameService gameService, GameFlowService gameFlowService) {
         this.gameService = gameService;
         this.gameFlowService = gameFlowService;
-        this.fetchService = fetchService;
     }
 
     @PostMapping

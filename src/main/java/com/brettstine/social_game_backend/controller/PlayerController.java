@@ -9,7 +9,6 @@ import com.brettstine.social_game_backend.service.PlayerService;
 import com.brettstine.social_game_backend.service.ValidationService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 

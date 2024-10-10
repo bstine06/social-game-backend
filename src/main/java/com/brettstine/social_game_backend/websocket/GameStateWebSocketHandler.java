@@ -9,8 +9,6 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.brettstine.social_game_backend.model.GameModel;
-import com.brettstine.social_game_backend.model.PlayerModel;
-import com.brettstine.social_game_backend.repository.GameRepository;
 import com.brettstine.social_game_backend.service.GameService;
 
 import java.io.IOException;
