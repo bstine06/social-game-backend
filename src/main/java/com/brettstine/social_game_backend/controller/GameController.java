@@ -114,9 +114,6 @@ public class GameController {
             gameFlowService.tryAdvanceGameState(game);
             // log successful game state advancement inside of gameFlowService
 
-            // websocket broadcast change
-            gameFlowService.broadcastGameState(game);
-
             return ResponseEntity.ok(game);
         } catch (IllegalArgumentException e) {
             logger.error("Game: {} : Error advancing state", gameId, e);
