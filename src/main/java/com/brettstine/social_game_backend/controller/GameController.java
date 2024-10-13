@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import com.brettstine.social_game_backend.model.GameDeletionReason;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.GameService;
@@ -69,7 +70,7 @@ public class GameController {
             CookieUtil.deleteCookie(response, "hostId");
             logger.info("Deleted host cookie with id: {}", hostId);
 
-            gameFlowService.closeWebsocketsOnGameDeletion(gameId);
+            gameFlowService.closeWebsocketsOnGameDeletion(gameId, GameDeletionReason.DELETED_BY_HOST);
 
             return ResponseEntity.ok(Map.of("message", "Successfully deleted game", "gameId", gameId));
         } catch (IllegalArgumentException e) {

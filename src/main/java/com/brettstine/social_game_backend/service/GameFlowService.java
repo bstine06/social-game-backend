@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.brettstine.social_game_backend.model.AnswerModel;
+import com.brettstine.social_game_backend.model.GameDeletionReason;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.model.GameState;
 import com.brettstine.social_game_backend.model.PlayerModel;
@@ -89,8 +90,8 @@ public class GameFlowService {
         }
     }
 
-    public void closeWebsocketsOnGameDeletion(String gameId) {
-        gameStateWebSocketHandler.closeConnectionsByGameId(gameId);
+    public void closeWebsocketsOnGameDeletion(String gameId, GameDeletionReason reason) {
+        gameStateWebSocketHandler.closeConnectionsByGameId(gameId, reason);
         watchPlayersWebSocketHandler.closeConnectionsByGameId(gameId);
     }
 
@@ -203,7 +204,7 @@ public class GameFlowService {
         List<PlayerModel> players = playerService.getAllPlayersByGame(game);
         if (players.size() < 3 && game.getGameState() != GameState.LOBBY) {
             gameService.deleteGame(game.getGameId());
-            closeWebsocketsOnGameDeletion(game.getGameId());
+            closeWebsocketsOnGameDeletion(game.getGameId(), GameDeletionReason.DELETED_BY_INSUFFICIENT_PLAYERS);
         }
     }
 }

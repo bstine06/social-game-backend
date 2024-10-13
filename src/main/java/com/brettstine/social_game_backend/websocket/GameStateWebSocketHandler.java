@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.brettstine.social_game_backend.model.GameDeletionReason;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.service.GameService;
 
@@ -66,10 +67,14 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
 
     // Method to broadcast updates to a specific game
     public void broadcastGameState(GameModel game) throws IOException {
-        List<WebSocketSession> sessions = gameSessionsMap.getOrDefault(game.getGameId(), new ArrayList<>());
+        broadcastToAllInGame(game.getGameId(), game.getGameState().toString());
+    }
+
+    public void broadcastToAllInGame(String gameId, String message) throws IOException {
+        List<WebSocketSession> sessions = gameSessionsMap.getOrDefault(gameId, new ArrayList<>());
         for (WebSocketSession session : sessions) {
             if (session.isOpen()) {
-                session.sendMessage(new TextMessage(game.getGameState().toString()));
+                session.sendMessage(new TextMessage(message));
             }
         }
     }
@@ -89,7 +94,13 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
         return query.split("=")[1]; // Extracting the gameId assuming the query is like ?gameId=1234
     }
 
-    public void closeConnectionsByGameId(String gameId) {
+    public void closeConnectionsByGameId(String gameId, GameDeletionReason reason) {
+        // send clients the reason for disconnect before closing the connection
+        try {
+            broadcastToAllInGame(gameId, reason.toString());
+        } catch (IOException e) {
+            logger.error("Error while broadcasting game deletion reason for game id: {}", gameId, e);
+        }
         List<WebSocketSession> sessions = gameSessionsMap.remove(gameId); // Get and remove the sessions for the gameId
         if (sessions != null) {
             for (WebSocketSession session : sessions) {

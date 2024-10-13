@@ -12,8 +12,10 @@ import com.brettstine.social_game_backend.repository.QuestionAssignmentRepositor
 import com.brettstine.social_game_backend.repository.QuestionRepository;
 import com.brettstine.social_game_backend.websocket.GameStateWebSocketHandler;
 import com.brettstine.social_game_backend.websocket.WatchPlayersWebSocketHandler;
+import com.brettstine.social_game_backend.model.GameDeletionReason;
 import com.brettstine.social_game_backend.model.GameModel;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -82,13 +84,12 @@ public class CleanupService {
 
                 oldGameIds.stream().forEach(gameId -> {
                     watchPlayersWebSocketHandler.closeConnectionsByGameId(gameId);
-                    gameStateWebSocketHandler.closeConnectionsByGameId(gameId);
+                    gameStateWebSocketHandler.closeConnectionsByGameId(gameId, GameDeletionReason.DELETED_BY_CLEAN_UP);
                 });
 
             } else {
                 logger.info("No old games found for deletion.");
             }
-
         } catch (Exception e) {
             logger.error("Error occurred during game cleanup: " + e.getMessage(), e);
         }
