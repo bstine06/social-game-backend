@@ -36,6 +36,12 @@ public class PlayerModel {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "shape")
+    private int shape;
+
+    @Column(name = "color")
+    private String color;
+
     @Column(name = "ready", nullable = false)
     private boolean ready;
 
@@ -65,10 +71,12 @@ public class PlayerModel {
     public PlayerModel() {
     }
 
-    public PlayerModel(GameModel game, String name) {
+    public PlayerModel(GameModel game, String name, int shape, String color) {
         this.playerId = UUID.randomUUID().toString();
         this.game = game;
         this.name = name;
+        this.shape = shape;
+        this.color = color;
         this.creationTime = LocalDateTime.now();
         this.score = 0;
         this.ready = false;
@@ -94,6 +102,14 @@ public class PlayerModel {
 
     public String getName() {
         return name;
+    }
+
+    public int getShape() {
+        return shape;
+    }
+
+    public String getColor() {
+        return color;
     }
 
     public boolean isReady() {

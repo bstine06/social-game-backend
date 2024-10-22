@@ -17,8 +17,8 @@ public class PlayerService {
         this.playerRepository = playerRepository;
     }
 
-    public PlayerModel createPlayer(GameModel game, String name) {
-        PlayerModel player = new PlayerModel(game, name);
+    public PlayerModel createPlayer(GameModel game, String name, int shape, String color) {
+        PlayerModel player = new PlayerModel(game, name, shape, color);
         player = playerRepository.save(player);
         return player;
     }

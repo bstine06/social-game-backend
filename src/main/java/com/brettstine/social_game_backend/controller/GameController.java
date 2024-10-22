@@ -50,7 +50,7 @@ public class GameController {
             logger.info("Game: {} : Successfully created game", game.getGameId());
 
             String hostId = game.getHostId();
-            CookieUtil.setHttpCookie(response, "hostId", hostId, 3600);
+            CookieUtil.setHttpCookie(response, "hostId", hostId, 7200);
             logger.info("Host cookie set with ID: {}", hostId);
             
             return ResponseEntity.ok(game);

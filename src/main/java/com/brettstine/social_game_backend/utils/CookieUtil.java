@@ -10,7 +10,7 @@ public class CookieUtil {
     Cookie cookie = new Cookie(key, value);
     cookie.setHttpOnly(true);
     cookie.setPath("/");
-    cookie.setMaxAge(maxAgeInSeconds); // 1 hour
+    cookie.setMaxAge(maxAgeInSeconds);
     cookie.setSecure(false); // Use this line for HTTP requests only
     response.addCookie(cookie); 
   }

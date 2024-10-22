@@ -52,17 +52,19 @@ public class PlayerController {
     public ResponseEntity<?> createPlayerAndAddToGame(HttpServletResponse response, @RequestBody Map<String, String> payload) {
         String name = payload.get("name");
         String gameId = payload.get("gameId");
+        String shape = payload.get("shape");
+        String color = payload.get("color");
 
         try {
             GameModel game = fetchService.getGameById(gameId);
             gameFlowService.checkMaximumPlayersForGame(game);
             validationService.ensureGameState(game, GameState.LOBBY);
 
-            PlayerModel player = playerService.createPlayer(game, name);
+            PlayerModel player = playerService.createPlayer(game, name, Integer.parseInt(shape), color);
             String playerId = player.getPlayerId();
             logger.info("Game: {} : Player created with ID: {}, name: {}", gameId, playerId, name);
 
-            CookieUtil.setHttpCookie(response, "playerId", playerId, 3600);;
+            CookieUtil.setHttpCookie(response, "playerId", playerId, 7200);;
             logger.info("Player cookie set with ID: {}", playerId);
 
             // websocket broadcast update
