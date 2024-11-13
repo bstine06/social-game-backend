@@ -1,5 +1,6 @@
 package com.brettstine.social_game_backend.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.lang.NonNull;
@@ -9,10 +10,22 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 
 import com.brettstine.social_game_backend.websocket.GameStateWebSocketHandler;
 import com.brettstine.social_game_backend.websocket.WatchPlayersWebSocketHandler;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Configuration
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        // Enable UTF-8 and escape non-ASCII characters for better compatibility
+        objectMapper.writer(new DefaultPrettyPrinter());
+        objectMapper.registerModule(new JavaTimeModule());  // Register Java 8 date/time module
+        return objectMapper;
+    }
 
     // Inject the Environment to access frontend url 
     // from application.properties for CORS validation

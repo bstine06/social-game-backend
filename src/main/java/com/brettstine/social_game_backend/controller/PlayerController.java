@@ -60,6 +60,9 @@ public class PlayerController {
             gameFlowService.checkMaximumPlayersForGame(game);
             validationService.ensureGameState(game, GameState.LOBBY);
 
+            if (shape == null) shape = "1";
+            if (color == null) color = "1";
+
             PlayerModel player = playerService.createPlayer(game, name, Integer.parseInt(shape), color);
             String playerId = player.getPlayerId();
             logger.info("Game: {} : Player created with ID: {}, name: {}", gameId, playerId, name);
