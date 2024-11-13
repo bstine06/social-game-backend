@@ -19,17 +19,28 @@ public class WatchPlayersDTO {
     }
 
     public void addPlayer(PlayerDTO player, boolean readyStatus) {
-        this.players.add(new PlayerStatusDTO(player, readyStatus));
+        if (players.isEmpty()) {
+            this.players.add(new PlayerStatusDTO(player, readyStatus, true));
+        } else {
+            this.players.add(new PlayerStatusDTO(player, readyStatus, false));
+        }
     }
 
     // Nested DTO to represent Player and Ready status
     public static class PlayerStatusDTO {
         private PlayerDTO player;
         private boolean ready;
+        private boolean isLeader = false;
 
         public PlayerStatusDTO(PlayerDTO player, boolean ready) {
             this.player = player;
             this.ready = ready;
+        }
+
+        public PlayerStatusDTO(PlayerDTO player, boolean ready, boolean isLeader) {
+            this.player = player;
+            this.ready = ready;
+            this.isLeader = isLeader;
         }
 
         public PlayerDTO getPlayer() {
@@ -46,6 +57,14 @@ public class WatchPlayersDTO {
 
         public void setReady(boolean ready) {
             this.ready = ready;
+        }
+
+        public void setLeader(boolean isLeader) {
+            this.isLeader = isLeader;
+        }
+
+        public boolean isLeader() {
+            return isLeader;
         }
     }
 }
