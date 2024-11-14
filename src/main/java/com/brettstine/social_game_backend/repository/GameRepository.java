@@ -1,6 +1,6 @@
 package com.brettstine.social_game_backend.repository;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,10 +17,10 @@ public interface GameRepository extends JpaRepository<GameModel, String> {
     @Modifying
     @Transactional
     @Query("DELETE FROM GameModel g WHERE g.creationTime < :cutoffTime")
-    int deleteOldGames(@Param("cutoffTime") LocalDateTime cutoffTime);
+    int deleteOldGames(@Param("cutoffTime") Instant cutoffTime);
 
     @Query("SELECT g FROM GameModel g WHERE g.creationTime < :cutoffTime")
-    List<GameModel> findOldGames(@Param("cutoffTime") LocalDateTime cutoffTime);
+    List<GameModel> findOldGames(@Param("cutoffTime") Instant cutoffTime);
 
     @Query("SELECT g FROM GameModel g WHERE g.hostId = :hostId")
     Optional<GameModel> findByHostId(@Param("hostId") String hostId);

@@ -8,12 +8,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.brettstine.social_game_backend.dto.GameStateDTO;
 import com.brettstine.social_game_backend.model.GameDeletionReason;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.service.GameService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,6 +27,9 @@ import org.slf4j.LoggerFactory;
 public class GameStateWebSocketHandler extends TextWebSocketHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GameStateWebSocketHandler.class);
+
+    // This object allows serializing the game state dto to JSON
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Store active WebSocket sessions by gameId
     private final Map<String, List<WebSocketSession>> gameSessionsMap = new ConcurrentHashMap<>();
@@ -67,11 +73,19 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
 
     // Method to broadcast updates to a specific game
     public void broadcastGameState(GameModel game) throws IOException {
-        broadcastToAllInGame(game.getGameId(), game.getGameState().toString());
+        broadcastToAllInGame(game.getGameId(), game.getGameState().toString(), game.getTimerEnd());
     }
 
-    public void broadcastToAllInGame(String gameId, String message) throws IOException {
+    private void broadcastToAllInGame(String gameId, String gameStateString, Instant timerEnd) throws IOException {
+        String timerEndString;
+        if (timerEnd == null) {
+            timerEndString = null;
+        } else {
+            timerEndString = timerEnd.toString();
+        }
+        GameStateDTO gameStateDTO = new GameStateDTO(gameId, gameStateString, timerEndString);
         List<WebSocketSession> sessions = gameSessionsMap.getOrDefault(gameId, new ArrayList<>());
+        String message = objectMapper.writeValueAsString(gameStateDTO);
         for (WebSocketSession session : sessions) {
             if (session.isOpen()) {
                 session.sendMessage(new TextMessage(message));
@@ -97,7 +111,7 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
     public void closeConnectionsByGameId(String gameId, GameDeletionReason reason) {
         // send clients the reason for disconnect before closing the connection
         try {
-            broadcastToAllInGame(gameId, reason.toString());
+            broadcastToAllInGame(gameId, reason.toString(), null);
         } catch (IOException e) {
             logger.error("Error while broadcasting game deletion reason for game id: {}", gameId, e);
         }

@@ -1,6 +1,6 @@
 package com.brettstine.social_game_backend.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,7 +43,7 @@ public class QuestionModel {
 
     @Column(name = "creation_time", nullable = false)
     @JsonIgnore
-    private LocalDateTime creationTime;
+    private Instant creationTime;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
@@ -64,7 +64,7 @@ public class QuestionModel {
         this.game = game;
         this.player = player;
         this.content = content;
-        this.creationTime = LocalDateTime.now();
+        this.creationTime = Instant.now();
         this.votingStatus = VotingStatus.NOT_VOTED;
     }
 
@@ -94,7 +94,7 @@ public class QuestionModel {
         return content;
     }
 
-    public LocalDateTime getCreationTime() {
+    public Instant getCreationTime() {
         return creationTime;
     }
 
@@ -114,7 +114,7 @@ public class QuestionModel {
         this.content = content;
     }
 
-    public void setCreationTime(LocalDateTime creationTime) {
+    public void setCreationTime(Instant creationTime) {
         this.creationTime = creationTime;
     }
 

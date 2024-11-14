@@ -1,6 +1,6 @@
 package com.brettstine.social_game_backend.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,7 +30,7 @@ public class GameModel {
     private String hostId;
 
     @Column(name = "creation_time", nullable = false)
-    private LocalDateTime creationTime;
+    private Instant creationTime;
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
@@ -53,7 +53,7 @@ public class GameModel {
     private List<PlayerAnswerVoteModel> playerAnswerVotes;
 
     @Column(name = "timer_end")
-    private LocalDateTime timerEnd;
+    private Instant timerEnd;
 
     public GameModel() {
     }
@@ -61,7 +61,7 @@ public class GameModel {
     public GameModel(String gameId) {
         this.gameState = GameState.LOBBY;
         this.gameId = gameId;
-        this.creationTime = LocalDateTime.now();
+        this.creationTime = Instant.now();
         this.hostId = UUID.randomUUID().toString();
     }
 
@@ -85,7 +85,7 @@ public class GameModel {
         return hostId;
     }
 
-    public LocalDateTime getCreationTime() {
+    public Instant getCreationTime() {
         return creationTime;
     }
 
@@ -126,11 +126,11 @@ public class GameModel {
         this.playerAnswerVotes = playerAnswerVotes;
     }
 
-    public LocalDateTime getTimerEnd() {
+    public Instant getTimerEnd() {
         return timerEnd;
     }
 
-    public void setTimerEnd(LocalDateTime time) {
+    public void setTimerEnd(Instant time) {
         this.timerEnd = time;
     }
 }

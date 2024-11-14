@@ -1,7 +1,7 @@
 package com.brettstine.social_game_backend.service;
 
 import java.util.List;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import org.hibernate.Hibernate;
 import org.slf4j.Logger;
@@ -92,11 +92,11 @@ public class GameService {
         return allGames;
     }
 
-    public LocalDateTime getTimerEnd(GameModel game) {
+    public Instant getTimerEnd(GameModel game) {
         return game.getTimerEnd();
     }
 
-    public void setTimerEnd(GameModel game, LocalDateTime time) {
+    public void setTimerEnd(GameModel game, Instant time) {
         game.setTimerEnd(time);
     }
 }

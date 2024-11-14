@@ -1,6 +1,6 @@
 package com.brettstine.social_game_backend.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -66,7 +66,7 @@ public class PlayerModel {
 
     @Column(name = "creation_time", nullable = false)
     @JsonIgnore
-    private LocalDateTime creationTime;
+    private Instant creationTime;
 
     public PlayerModel() {
     }
@@ -77,7 +77,7 @@ public class PlayerModel {
         this.name = name;
         this.shape = shape;
         this.color = color;
-        this.creationTime = LocalDateTime.now();
+        this.creationTime = Instant.now();
         this.score = 0;
         this.ready = false;
     }
@@ -140,7 +140,7 @@ public class PlayerModel {
         score++;
     }
 
-    public LocalDateTime getCreationTime() {
+    public Instant getCreationTime() {
         return creationTime;
     }
 }

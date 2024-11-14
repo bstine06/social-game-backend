@@ -1,6 +1,6 @@
 package com.brettstine.social_game_backend.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -40,7 +40,7 @@ public class PlayerAnswerVoteModel {
 
     @Column(name = "creation_time", nullable = false)
     @JsonIgnore
-    private LocalDateTime creationTime;
+    private Instant creationTime;
 
     public PlayerAnswerVoteModel() {
     }
@@ -49,7 +49,7 @@ public class PlayerAnswerVoteModel {
         this.player = player;
         this.answer = answer;
         this.game = game;
-        this.creationTime = LocalDateTime.now();
+        this.creationTime = Instant.now();
     }
 
     // Getters and Setters
@@ -92,11 +92,11 @@ public class PlayerAnswerVoteModel {
         this.game = game;
     }
 
-    public LocalDateTime getCreationTime() {
+    public Instant getCreationTime() {
         return creationTime;
     }
 
-    public void setCreationTime(LocalDateTime creationTime) {
+    public void setCreationTime(Instant creationTime) {
         this.creationTime = creationTime;
     }
 

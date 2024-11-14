@@ -16,7 +16,8 @@ import com.brettstine.social_game_backend.model.GameDeletionReason;
 import com.brettstine.social_game_backend.model.GameModel;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -58,8 +59,7 @@ public class CleanupService {
     @Transactional
     public void cleanUp() {
         logger.info("Performing scheduled clean up:");
-        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(1); // Delete everything older than 1 hours.
-        // LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(3); // Use only for debugging
+        Instant cutoffTime = Instant.now().minus(Duration.ofHours(1)); // Delete everything older than 1 hours.
         try {
             // Get the IDs of games to be deleted
             List<GameModel> oldGames = gameRepository.findOldGames(cutoffTime);

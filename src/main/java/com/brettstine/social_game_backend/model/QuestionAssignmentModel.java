@@ -1,6 +1,6 @@
 package com.brettstine.social_game_backend.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.List;
@@ -44,7 +44,7 @@ public class QuestionAssignmentModel {
 
     @Column(name = "creation_time", nullable = false)
     @JsonIgnore
-    private LocalDateTime creationTime;
+    private Instant creationTime;
 
     public QuestionAssignmentModel() {
     }
@@ -53,7 +53,7 @@ public class QuestionAssignmentModel {
         this.question = question;
         this.player = player;
         this.game = game;
-        this.creationTime = LocalDateTime.now();
+        this.creationTime = Instant.now();
     }
 
     @JsonProperty("questionId")
@@ -96,11 +96,11 @@ public class QuestionAssignmentModel {
         this.game = game;
     }
 
-    public LocalDateTime getCreationTime() {
+    public Instant getCreationTime() {
         return creationTime;
     }
 
-    public void setCreationTime(LocalDateTime creationTime) {
+    public void setCreationTime(Instant creationTime) {
         this.creationTime = creationTime;
     }
 

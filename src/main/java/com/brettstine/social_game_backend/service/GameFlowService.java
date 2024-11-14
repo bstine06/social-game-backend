@@ -2,7 +2,7 @@ package com.brettstine.social_game_backend.service;
 
 import java.util.List;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +144,7 @@ public class GameFlowService {
                 return;
             }
             voteService.openVotingForQuestion(unvotedQuestion);
-            gameService.setTimerEnd(game, LocalDateTime.now().plusSeconds(VOTING_TIME));
+            gameService.setTimerEnd(game, Instant.now().plusSeconds(VOTING_TIME));
             setGameState(game, GameState.DISPLAY_BALLOT);
             //TODO: Implement animations in front end, reprompt the advance, and remove this line
             tryAdvanceGameState(game);
@@ -152,8 +152,8 @@ public class GameFlowService {
            setGameState(game, GameState.VOTE);
         } else if (game.getGameState() == GameState.VOTE) {
             // Check if the voting time has elapsed
-            LocalDateTime timerEnd = game.getTimerEnd();
-            if (timerEnd != null && LocalDateTime.now().isAfter(timerEnd)) {
+            Instant timerEnd = game.getTimerEnd();
+            if (timerEnd != null && Instant.now().isAfter(timerEnd)) {
                 gameService.setGameState(game, GameState.DISPLAY_VOTES);
             }
             // Check is all possible votes have been submitted
