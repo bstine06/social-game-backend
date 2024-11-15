@@ -96,7 +96,14 @@ public class GameService {
         return game.getTimerEnd();
     }
 
+    public void resetTimer(GameModel game) {
+        setTimerEnd(game, Instant.now().plusSeconds(game.getTimerDuration()));
+    }
+
     public void setTimerEnd(GameModel game, Instant time) {
-        game.setTimerEnd(time);
+        GameModel managedGame = gameRepository.findById(game.getGameId())
+            .orElseThrow(() -> new IllegalArgumentException("No game found with ID: " + game.getGameId()));
+        managedGame.setTimerEnd(time);
+        gameRepository.save(managedGame);
     }
 }

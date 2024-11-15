@@ -52,6 +52,9 @@ public class GameModel {
     @JsonManagedReference
     private List<PlayerAnswerVoteModel> playerAnswerVotes;
 
+    @Column(name = "timer_duration")
+    private long timerDuration;
+
     @Column(name = "timer_end")
     private Instant timerEnd;
 
@@ -63,6 +66,7 @@ public class GameModel {
         this.gameId = gameId;
         this.creationTime = Instant.now();
         this.hostId = UUID.randomUUID().toString();
+        this.timerDuration = 60;
     }
 
     public String getGameId() {
@@ -124,6 +128,14 @@ public class GameModel {
 
     public void setPlayerAnswerVotes(List<PlayerAnswerVoteModel> playerAnswerVotes) {
         this.playerAnswerVotes = playerAnswerVotes;
+    }
+
+    public long getTimerDuration() {
+        return timerDuration;
+    }
+
+    public void setTimerDuration(long timerDuration) {
+        this.timerDuration = timerDuration;
     }
 
     public Instant getTimerEnd() {

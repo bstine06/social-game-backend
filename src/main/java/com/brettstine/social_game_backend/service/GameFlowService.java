@@ -22,8 +22,6 @@ public class GameFlowService {
 
     private static final Logger logger = LoggerFactory.getLogger(GameFlowService.class);
 
-    private final int VOTING_TIME = 30;
-
     private final GameService gameService;
     private final PlayerService playerService;
     private final QuestionService questionService;
@@ -32,13 +30,13 @@ public class GameFlowService {
     private final GameStateWebSocketHandler gameStateWebSocketHandler;
     private final WatchPlayersWebSocketHandler watchPlayersWebSocketHandler;
 
-    public GameFlowService(GameService gameService, 
-                        PlayerService playerService, 
-                        QuestionService questionService,
-                        AnswerService answerService, 
-                        VoteService voteService, 
-                        GameStateWebSocketHandler gameStateWebSocketHandler,
-                        WatchPlayersWebSocketHandler watchPlayersWebSocketHandler) {
+    public GameFlowService(GameService gameService,
+            PlayerService playerService,
+            QuestionService questionService,
+            AnswerService answerService,
+            VoteService voteService,
+            GameStateWebSocketHandler gameStateWebSocketHandler,
+            WatchPlayersWebSocketHandler watchPlayersWebSocketHandler) {
         this.gameService = gameService;
         this.playerService = playerService;
         this.questionService = questionService;
@@ -86,7 +84,7 @@ public class GameFlowService {
         try {
             gameStateWebSocketHandler.broadcastGameState(game);
         } catch (IOException e) {
-            logger.error("GAME: {} : Error broadcasting players list", game.getGameId(), e);
+            logger.error("GAME: {} : Error broadcasting game state", game.getGameId(), e);
         }
     }
 
@@ -107,6 +105,7 @@ public class GameFlowService {
 
         if (game.getGameState() == GameState.LOBBY) {
             checkMinimumPlayersForQuestionState(game); // Ensure there are enough players before transitioning
+            gameService.resetTimer(game);
             setGameState(game, GameState.QUESTION);
             logger.info("Game: {} : Advanced gameState to: {}", game.getGameId(), game.getGameState());
         } else if (game.getGameState() == GameState.QUESTION) {
@@ -120,6 +119,7 @@ public class GameFlowService {
                         game.getGameState());
                 assignQuestionsToPlayers(game);
                 logger.info("Game: {} : Successfully assigned questions", game.getGameId());
+                gameService.resetTimer(game);
                 setGameState(game, GameState.ANSWER);
                 logger.info("Game: {} : Advanced gameState to : {}", game.getGameId(), game.getGameState());
             }
@@ -144,12 +144,13 @@ public class GameFlowService {
                 return;
             }
             voteService.openVotingForQuestion(unvotedQuestion);
-            gameService.setTimerEnd(game, Instant.now().plusSeconds(VOTING_TIME));
+            gameService.resetTimer(game);
             setGameState(game, GameState.DISPLAY_BALLOT);
-            //TODO: Implement animations in front end, reprompt the advance, and remove this line
+            // TODO: Implement animations in front end, reprompt the advance, and remove
+            // this line
             tryAdvanceGameState(game);
         } else if (game.getGameState() == GameState.DISPLAY_BALLOT) {
-           setGameState(game, GameState.VOTE);
+            setGameState(game, GameState.VOTE);
         } else if (game.getGameState() == GameState.VOTE) {
             // Check if the voting time has elapsed
             Instant timerEnd = game.getTimerEnd();
