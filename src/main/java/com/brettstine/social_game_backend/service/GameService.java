@@ -96,14 +96,23 @@ public class GameService {
         return game.getTimerEnd();
     }
 
-    public void resetTimer(GameModel game) {
-        setTimerEnd(game, Instant.now().plusSeconds(game.getTimerDuration()));
+    public GameModel resetTimer(GameModel game) {
+        return resetTimerWithSeconds(game, game.getTimerDuration());
     }
 
-    public void setTimerEnd(GameModel game, Instant time) {
+    public GameModel resetTimerWithSeconds(GameModel game, long seconds) {
+            // Update the timer end in the game model
+            Instant newTime = Instant.now().plusSeconds(seconds);
+            return setTimerEnd(game, newTime);
+    }
+
+    @Transactional
+    public GameModel setTimerEnd(GameModel game, Instant time) {
         GameModel managedGame = gameRepository.findById(game.getGameId())
             .orElseThrow(() -> new IllegalArgumentException("No game found with ID: " + game.getGameId()));
         managedGame.setTimerEnd(time);
-        gameRepository.save(managedGame);
+        gameRepository.saveAndFlush(managedGame);
+        logger.info("Game: {} : Timer set and saved in the database. timerEnd is: {}", game.getGameId(), managedGame.getTimerEnd());
+        return managedGame;
     }
 }

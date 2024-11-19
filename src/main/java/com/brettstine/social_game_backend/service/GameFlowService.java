@@ -7,6 +7,7 @@ import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.brettstine.social_game_backend.model.AnswerModel;
 import com.brettstine.social_game_backend.model.GameDeletionReason;
@@ -21,6 +22,10 @@ import com.brettstine.social_game_backend.websocket.WatchPlayersWebSocketHandler
 public class GameFlowService {
 
     private static final Logger logger = LoggerFactory.getLogger(GameFlowService.class);
+
+    private final long TIME_DURATION_DISPLAY_BALLOT = 6;
+    private final long TIME_DURATION_VOTE = 15;
+    private final long TIME_DURATION_DISPLAY_VOTES = 8;
 
     private final GameService gameService;
     private final PlayerService playerService;
@@ -102,28 +107,44 @@ public class GameFlowService {
 
     // method to advance game state only when certain conditions are met
     public void tryAdvanceGameState(GameModel game) {
+        logger.info("Game: {} : Attempting to advance game state from: {}", game.getGameId(), game.getGameState());
 
         if (game.getGameState() == GameState.LOBBY) {
             checkMinimumPlayersForQuestionState(game); // Ensure there are enough players before transitioning
             gameService.resetTimer(game);
             setGameState(game, GameState.QUESTION);
             logger.info("Game: {} : Advanced gameState to: {}", game.getGameId(), game.getGameState());
-        } else if (game.getGameState() == GameState.QUESTION) {
+            return;
+        }
+        if (game.getGameState() == GameState.QUESTION) {
             // If all players have submitted their questions, advance to the ANSWER phase
             List<PlayerModel> players = playerService.getAllPlayersByGame(game);
             boolean allPlayersSubmittedQuestions = players.stream()
                     .allMatch(player -> questionService.hasSubmittedQuestion(player));
             if (allPlayersSubmittedQuestions) {
                 setGameState(game, GameState.ASSIGN);
-                logger.info("Game: {} : All players submitted questions, advanced gameState to: {}", game.getGameId(),
+                logger.info("Game: {} : All players submitted questions, Advanced gameState to: {}", game.getGameId(),
                         game.getGameState());
                 assignQuestionsToPlayers(game);
                 logger.info("Game: {} : Successfully assigned questions", game.getGameId());
-                gameService.resetTimer(game);
-                setGameState(game, GameState.ANSWER);
+                GameModel gameWithUpdatedTimer = gameService.resetTimer(game);
+                setGameState(gameWithUpdatedTimer, GameState.ANSWER);
                 logger.info("Game: {} : Advanced gameState to : {}", game.getGameId(), game.getGameState());
+                return;
+            } else if (game.getTimerEnd().isBefore(Instant.now())) {
+                setGameState(game, GameState.ASSIGN);
+                logger.info("Game: {} : Timer expired before all players could submit questions, Advanced gameState to: {}", game.getGameId(), game.getGameState());
+                submitDefaultQuestions(game);
+                logger.info("Game: {} : auto-submitted questions for players who didn't submit", game.getGameId());
+                assignQuestionsToPlayers(game);
+                logger.info("Game: {} : Successfully assigned questions", game.getGameId());
+                GameModel gameWithUpdatedTimer = gameService.resetTimer(game);
+                setGameState(gameWithUpdatedTimer, GameState.ANSWER);
+                logger.info("Game: {} : Advanced gameState to : {}", game.getGameId(), game.getGameState());
+                return;
             }
-        } else if (game.getGameState() == GameState.ANSWER) {
+        }
+        if (game.getGameState() == GameState.ANSWER) {
             // If all questions have recieved two answers, advance to the PRESENT phase
             List<QuestionModel> questions = questionService.getAllQuestionsByGame(game);
             boolean allQuestionsHaveTwoAnswers = questions.stream()
@@ -133,8 +154,14 @@ public class GameFlowService {
                 logger.info("Game: {} : All questions received two answers, advanced gameState to : {}",
                         game.getGameId(), game.getGameState());
                 tryAdvanceGameState(game);
+            } else if (game.getTimerEnd().isBefore(Instant.now())) {
+                setGameState(game, GameState.FIND_BALLOT);
+                logger.info("Game: {} : Timer expired before all players could submit answers, advanced gameState to: {}", game.getGameId(), game.getGameState());
+                tryAdvanceGameState(game);
             }
-        } else if (game.getGameState() == GameState.FIND_BALLOT) {
+            return;
+        }
+        if (game.getGameState() == GameState.FIND_BALLOT) {
             // Get a question that hasn't had a voting session for its answers yet
             QuestionModel unvotedQuestion = voteService.getOneUnvotedQuestionInGame(game);
             if (unvotedQuestion == null) {
@@ -145,29 +172,43 @@ public class GameFlowService {
             }
             voteService.openVotingForQuestion(unvotedQuestion);
             gameService.resetTimer(game);
-            setGameState(game, GameState.DISPLAY_BALLOT);
-            // TODO: Implement animations in front end, reprompt the advance, and remove
-            // this line
-            tryAdvanceGameState(game);
-        } else if (game.getGameState() == GameState.DISPLAY_BALLOT) {
-            setGameState(game, GameState.VOTE);
-        } else if (game.getGameState() == GameState.VOTE) {
-            // Check if the voting time has elapsed
-            Instant timerEnd = game.getTimerEnd();
-            if (timerEnd != null && Instant.now().isAfter(timerEnd)) {
-                gameService.setGameState(game, GameState.DISPLAY_VOTES);
-            }
+            GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_DISPLAY_BALLOT);
+            setGameState(gameWithUpdatedTimer, GameState.DISPLAY_BALLOT);
+            return;
+        }
+        if (game.getGameState() == GameState.DISPLAY_BALLOT) {
+            GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_VOTE);
+            setGameState(gameWithUpdatedTimer, GameState.VOTE);
+            return;
+        }
+        if (game.getGameState() == GameState.VOTE) {
             // Check is all possible votes have been submitted
             if (voteService.hasQuestionReceivedAllPossibleVotes(voteService.getCurrentQuestion(game))) {
-                setGameState(game, GameState.DISPLAY_VOTES);
+                GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_DISPLAY_VOTES);
+                setGameState(gameWithUpdatedTimer, GameState.DISPLAY_VOTES);
+            } else if (game.getTimerEnd().isBefore(Instant.now())) {
+                GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_DISPLAY_VOTES);
+                setGameState(gameWithUpdatedTimer, GameState.DISPLAY_VOTES);
             }
-        } else if (game.getGameState() == GameState.DISPLAY_VOTES) {
+            return;
+        }
+        if (game.getGameState() == GameState.DISPLAY_VOTES) {
             // Get the active voting question and close its voting
             QuestionModel currentQuestion = voteService.getCurrentQuestion(game);
             voteService.closeVotingForQuestion(currentQuestion);
             setGameState(game, GameState.FIND_BALLOT);
             tryAdvanceGameState(game);
+            return;
         }
+    }
+
+    @Transactional
+    public void submitDefaultQuestions(GameModel game) {
+        playerService.getAllPlayersByGame(game).stream().forEach((PlayerModel p) -> {
+            if (!questionService.hasSubmittedQuestion(p)) {
+                questionService.submitQuestion(game, p, p.getName() + " was too slow to submit a question because _____");
+            }
+        });
     }
 
     public void assignQuestionsToPlayers(GameModel game) {

@@ -74,7 +74,7 @@ public class GameController {
 
             return ResponseEntity.ok(Map.of("message", "Successfully deleted game", "gameId", gameId));
         } catch (IllegalArgumentException e) {
-            logger.error("Game: {} : Error deleting game", gameId, e);
+            logger.error("Game: {} : Error deleting game", gameId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "could not delete game", "message", e.getMessage()));
         } catch (Exception e) {
@@ -92,7 +92,7 @@ public class GameController {
             logger.info("Game: {} : Successfully executed getState", gameId);
             return ResponseEntity.ok(Map.of("gameState", gameState));
         } catch (IllegalArgumentException e) {
-            logger.error("Game: {} : Error executing getState", e);
+            logger.error("Game: {} : Error executing getState", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Could not get gameState", "message", e.getMessage()));
         } catch (Exception e) {
@@ -111,7 +111,7 @@ public class GameController {
 
             return ResponseEntity.ok(game);
         } catch (IllegalArgumentException e) {
-            logger.error("Game: {} : Error advancing state", gameId, e);
+            logger.error("Game: {} : Error advancing state", gameId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Could not advance gameState", "message", e.getMessage()));
         } catch (Exception e) {
@@ -141,7 +141,7 @@ public class GameController {
             logger.info("Successfully retrieved game by id: {}", gameId);
             return ResponseEntity.ok(game);
         } catch (IllegalArgumentException e) {
-            logger.error("Game: {} : Error retrieving game", gameId, e);
+            logger.error("Game: {} : Error retrieving game", gameId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Could not retrieve game", "message", e.getMessage()));
         } catch (Exception e) {
@@ -159,7 +159,7 @@ public class GameController {
             logger.info("Successfully retrieved game with host id: {}", hostId);
             return ResponseEntity.ok(game);
         } catch (IllegalArgumentException e) {
-            logger.error("Error retrieving game", e); 
+            logger.error("Error retrieving game", e.getMessage()); 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Could not retrieve game", "message", e.getMessage()));
         } catch (Exception e) {

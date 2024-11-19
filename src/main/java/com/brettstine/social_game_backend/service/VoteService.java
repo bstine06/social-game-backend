@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.brettstine.social_game_backend.dto.AnswerDTO;
@@ -97,7 +98,7 @@ public class VoteService {
     }
 
     public void openVotingForQuestion(QuestionModel question) {
-        if (question.getAnswers().size() < 2) {
+        if (questionRepository.findAnswersByQuestionId(question.getQuestionId()).size() < 2) {
             throw new IllegalStateException("Cannot open voting for a question without at least 2 answers.");
         }
         GameModel game = question.getGame();
@@ -118,11 +119,16 @@ public class VoteService {
     }
 
     public boolean hasQuestionReceivedAllPossibleVotes(QuestionModel question) {
-        int totalPossibleVotes = question.getGame().getPlayers().size() - 2; //exclude the players actively competing
-        int totalVotes = question.getAnswers().stream()
-                .mapToInt(answer -> playerAnswerVoteRepository.countByAnswer(answer))
+        int totalPossibleVotes = questionRepository.countPlayersForGameOfQuestion(question.getQuestionId()) - 2; // exclude players actively competing
+
+        List<AnswerModel> answers = questionRepository.findAnswersByQuestionId(question.getQuestionId());
+        int totalVotes = answers.stream()
+                .mapToInt(answer -> {
+                    Integer count = playerAnswerVoteRepository.countByAnswer(answer);
+                    return (count != null) ? count : 0;
+                })
                 .sum();
-        return (totalVotes >= totalPossibleVotes);
+        return totalVotes >= totalPossibleVotes;
     }
 
 }

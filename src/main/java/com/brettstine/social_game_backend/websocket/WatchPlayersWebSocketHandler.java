@@ -10,6 +10,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.brettstine.social_game_backend.service.GameService;
 import com.brettstine.social_game_backend.service.PlayerService;
+import com.brettstine.social_game_backend.utils.MessageQueue;
 import com.brettstine.social_game_backend.dto.PlayerDTO;
 import com.brettstine.social_game_backend.dto.WatchPlayersDTO;
 import com.brettstine.social_game_backend.model.GameModel;
@@ -18,7 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Map; 
+import java.util.Map;
+import java.util.Objects;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,8 +36,8 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
     // This object allows serializing the list of players to JSON
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // Store active WebSocket sessions by gameId
-    private final Map<String, List<WebSocketSession>> gameSessionsMap = new ConcurrentHashMap<>();
+    // Store active WebSocket queues by gameId
+    private final Map<String, List<MessageQueue>> gameQueuesMap = new ConcurrentHashMap<>();
 
     private final GameService gameService;
     private final PlayerService playerService;
@@ -49,14 +51,14 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         String gameId = getGameIdFromSession(session);
         try {
-            // Attempt to retrieve the game with the provided ID
             GameModel game = gameService.getGameById(gameId);
-            
-            // Store the websocket session under the gameId
-            gameSessionsMap.computeIfAbsent(gameId, k -> new ArrayList<>()).add(session);
+
+            // Add the session to the message queue map
+            MessageQueue queue = new MessageQueue(session);
+            gameQueuesMap.computeIfAbsent(gameId, k -> new ArrayList<>()).add(queue);
             logger.info("WatchPlayers WebSocket connection established for gameId: {}", gameId);
-            
-            // Immediately send the players' names list as soon as websocket is created
+
+            // Send the initial players' list
             broadcastPlayersList(game);
         } catch (IllegalArgumentException e) {
             logger.warn("Invalid gameId: {}. Closing WebSocket connection.", gameId);
@@ -67,35 +69,37 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) throws Exception {
         String gameId = getGameIdFromSession(session);
-        // Remove the session from the gameId’s session list
-        List<WebSocketSession> sessions = gameSessionsMap.getOrDefault(gameId, new ArrayList<>());
-        sessions.remove(session);
-        if (sessions.isEmpty()) {
-            gameSessionsMap.remove(gameId);
+        List<MessageQueue> queues = gameQueuesMap.getOrDefault(gameId, new ArrayList<>());
+
+        // Remove the corresponding MessageQueue for this session
+        synchronized (queues) {
+            queues.removeIf(queue -> queue.getSession().equals(session));
+            if (queues.isEmpty()) {
+                gameQueuesMap.remove(gameId);
+            }
         }
-        logger.info("WatchPlayers WebSocket connection closed for gameId: {}. Close status: {}", gameId, status); // Log when a connection is closed
+        logger.info("WatchPlayers WebSocket connection closed for gameId: {}. Close status: {}", gameId, status);
     }
 
-    // Method to broadcast player list to a specific game
+    // Method to broadcast the players' list for a specific game
     public void broadcastPlayersList(GameModel game) throws IOException {
         List<PlayerModel> playersInGame = playerService.getAllPlayersByGame(game);
         WatchPlayersDTO watchPlayersDTO = new WatchPlayersDTO();
-        playersInGame.stream()
-                .forEach(p -> {
-                    boolean readyStatus = p.isReady();
-                    watchPlayersDTO.addPlayer(new PlayerDTO(p), readyStatus);
-                });
-        List<WebSocketSession> sessions = gameSessionsMap.getOrDefault(game.getGameId(), new ArrayList<>());
-        String message = objectMapper.writeValueAsString(watchPlayersDTO);  // Convert list to JSON
-        logger.info("WatchPlayers WebSocket: broadcasting players for gameId: {}", game.getGameId());
-        for (WebSocketSession session : sessions) {
-            if (session.isOpen()) {
-                session.sendMessage(new TextMessage(message));
-            }
-        }
+        playersInGame.stream().forEach(player -> {
+            boolean readyStatus = player.isReady();
+            watchPlayersDTO.addPlayer(new PlayerDTO(player), readyStatus);
+        });
+
+        String message = objectMapper.writeValueAsString(watchPlayersDTO);
+        broadcastToAllInGame(game.getGameId(), message);
     }
 
-
+    private void broadcastToAllInGame(String gameId, String message) {
+        List<MessageQueue> queues = gameQueuesMap.getOrDefault(gameId, new ArrayList<>());
+        for (MessageQueue queue : queues) {
+            queue.enqueue(new TextMessage(message));
+        }
+    }
 
     // Helper method to extract the gameId from the WebSocket session’s URL
     private String getGameIdFromSession(WebSocketSession session) {
@@ -113,17 +117,19 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
     }
 
     public void closeConnectionsByGameId(String gameId) {
-        List<WebSocketSession> sessions = gameSessionsMap.remove(gameId); // Get and remove the sessions for the gameId
-        if (sessions != null) {
-            for (WebSocketSession session : sessions) {
+        List<MessageQueue> queues = gameQueuesMap.remove(gameId);
+        if (queues != null) {
+            for (MessageQueue queue : queues) {
                 try {
-                    CloseStatus closeStatus = new CloseStatus(4000, "Game " + gameId + " was deleted.");  // Custom close code and reason
-                    session.close(closeStatus);
-                    logger.info("Closed WatchPlayers WebSocket connection for gameId: {}", gameId); // Log when a connection is closed
+                    WebSocketSession session = queue.getSession();
+                    if (session.isOpen()) {
+                        session.close(new CloseStatus(4000, "Game " + gameId + " was deleted."));
+                        logger.info("Closed WatchPlayers WebSocket connection for gameId: {}", gameId);
+                    }
                 } catch (IOException e) {
-                    logger.error("Error while closing websocket connection for game id: {}", gameId, e);
+                    logger.error("Error while closing WebSocket connection for game id: {}", gameId, e);
                 }
             }
         }
-    }    
+    }
 }
