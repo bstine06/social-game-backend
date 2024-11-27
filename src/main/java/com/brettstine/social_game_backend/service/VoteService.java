@@ -26,10 +26,14 @@ import com.brettstine.social_game_backend.repository.QuestionRepository;
 public class VoteService {
     
     private final PlayerAnswerVoteRepository playerAnswerVoteRepository;
+    private final QuestionService questionService;
+    private final AnswerService answerService;
     private final QuestionRepository questionRepository;
 
-    public VoteService(PlayerAnswerVoteRepository playerAnswerVoteRepository, QuestionRepository questionRepository) {
+    public VoteService(PlayerAnswerVoteRepository playerAnswerVoteRepository, QuestionService questionService, AnswerService answerService, QuestionRepository questionRepository) {
         this.playerAnswerVoteRepository = playerAnswerVoteRepository;
+        this.questionService = questionService;
+        this.answerService = answerService;
         this.questionRepository = questionRepository;
     }
 
@@ -68,11 +72,21 @@ public class VoteService {
 
     public BallotDTO getCurrentBallot(GameModel game) {
         QuestionModel question = getCurrentQuestion(game);
-        QuestionDTO questionDTO = new QuestionDTO(question.getContent(), question.getQuestionId(), question.getPlayer().getName());
+        QuestionDTO questionDTO = new QuestionDTO(question.getContent(), question.getQuestionId(), question.getPlayer());
+
         List<AnswerModel> answers = question.getAnswers();
         List<AnswerDTO> answerDTOs = answers.stream()
-                .map((answer) -> new AnswerDTO(answer.getContent(), answer.getAnswerId(), answer.getPlayerId(), answer.getPlayer().getName()))
+                .map((answer) -> new AnswerDTO(answer.getContent(), answer.getAnswerId(), answer.getPlayer()))
                 .collect(Collectors.toList());
+
+        if (answerService.getAnswersForQuestion(question).size() < 2) {
+            getPlayersWhoFailedToAnswerQuestion(question).stream()
+                .forEach((player) -> {
+                    AnswerDTO failedAnswerDTO = new AnswerDTO(player, false);
+                    answerDTOs.add(failedAnswerDTO);
+                });
+        }
+
         BallotDTO ballotDTO = new BallotDTO(questionDTO, answerDTOs);
         return ballotDTO;
     }
@@ -87,7 +101,7 @@ public class VoteService {
                 });
         List<VoteDTO> votes = allPlayerAnswerVotes.stream()
                 .map((playerAnswerVote) -> {
-                    return new VoteDTO(playerAnswerVote.getPlayerId(), playerAnswerVote.getPlayer().getName(), playerAnswerVote.getAnswerId());
+                    return new VoteDTO(playerAnswerVote.getPlayer(), playerAnswerVote.getAnswerId());
                 })
                 .collect(Collectors.toList());
         return votes;
@@ -97,18 +111,24 @@ public class VoteService {
         return questionRepository.findAll();
     }
 
-    public void openVotingForQuestion(QuestionModel question) {
-        if (questionRepository.findAnswersByQuestionId(question.getQuestionId()).size() < 2) {
-            throw new IllegalStateException("Cannot open voting for a question without at least 2 answers.");
-        }
+    public boolean canQuestionReceiveVotes(QuestionModel question) {
         GameModel game = question.getGame();
         List<QuestionModel> questionsInProgressInGame = questionRepository.findByGameAndVotingStatus(game,
                 VotingStatus.IN_PROGRESS);
 
         if (!questionsInProgressInGame.isEmpty()) {
-            throw new IllegalStateException("Another question is already in progress for this game.");
+            return false;
+            // throw new IllegalStateException("Another question is already in progress for this game.");
         }
 
+        if (answerService.getAnswersForQuestion(question).size() < 2) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public void openVotingForQuestion(QuestionModel question) {
         question.setVotingStatus(VotingStatus.IN_PROGRESS);
         questionRepository.save(question);
     }
@@ -116,6 +136,25 @@ public class VoteService {
     public void closeVotingForQuestion(QuestionModel question) {
         question.setVotingStatus(VotingStatus.COMPLETE);
         questionRepository.save(question);
+    }
+
+    private List<PlayerModel> getPlayersWhoFailedToAnswerQuestion(QuestionModel question) {
+        // Get all players assigned to the question
+        List<PlayerModel> assignedPlayers = questionService.getPlayersAssignedToQuestion(question);
+        
+        // Get all players who submitted answers
+        List<PlayerModel> playersWithAnswers = questionRepository.findAnswersByQuestionId(question.getQuestionId())
+                .stream()
+                .map(AnswerModel::getPlayer)
+                .distinct()
+                .toList();
+    
+        // Identify players who failed to answer
+        List<PlayerModel> playersWhoFailed = assignedPlayers.stream()
+                .filter(player -> !playersWithAnswers.contains(player))
+                .toList();
+
+        return playersWhoFailed;
     }
 
     public boolean hasQuestionReceivedAllPossibleVotes(QuestionModel question) {

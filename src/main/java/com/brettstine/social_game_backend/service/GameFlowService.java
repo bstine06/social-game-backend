@@ -24,8 +24,7 @@ public class GameFlowService {
     private static final Logger logger = LoggerFactory.getLogger(GameFlowService.class);
 
     private final long TIME_DURATION_DISPLAY_BALLOT = 6;
-    private final long TIME_DURATION_VOTE = 15;
-    private final long TIME_DURATION_DISPLAY_VOTES = 8;
+    private final long TIME_DURATION_DISPLAY_VOTES = 30;
 
     private final GameService gameService;
     private final PlayerService playerService;
@@ -81,7 +80,7 @@ public class GameFlowService {
         try {
             watchPlayersWebSocketHandler.broadcastPlayersList(game);
         } catch (IOException e) {
-            logger.error("GAME: {} : Error broadcasting players list", game.getGameId(), e);
+            logger.error("Game: {} : Error broadcasting players list", game.getGameId(), e);
         }
     }
 
@@ -89,7 +88,7 @@ public class GameFlowService {
         try {
             gameStateWebSocketHandler.broadcastGameState(game);
         } catch (IOException e) {
-            logger.error("GAME: {} : Error broadcasting game state", game.getGameId(), e);
+            logger.error("Game: {} : Error broadcasting game state", game.getGameId(), e);
         }
     }
 
@@ -170,14 +169,22 @@ public class GameFlowService {
                 setGameState(game, GameState.SCORE);
                 return;
             }
-            voteService.openVotingForQuestion(unvotedQuestion);
-            gameService.resetTimer(game);
-            GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_DISPLAY_BALLOT);
-            setGameState(gameWithUpdatedTimer, GameState.DISPLAY_BALLOT);
+            if (voteService.canQuestionReceiveVotes(unvotedQuestion)) {
+                voteService.openVotingForQuestion(unvotedQuestion);
+                gameService.resetTimer(game);
+                GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_DISPLAY_BALLOT);
+                setGameState(gameWithUpdatedTimer, GameState.DISPLAY_BALLOT);
+            } else {
+                voteService.openVotingForQuestion(unvotedQuestion);
+                gameService.resetTimer(game);
+                GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_DISPLAY_VOTES);
+                setGameState(gameWithUpdatedTimer, GameState.DISPLAY_VOTES);
+            }
+            
             return;
         }
         if (game.getGameState() == GameState.DISPLAY_BALLOT) {
-            GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_VOTE);
+            GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, game.getTimerDuration());
             setGameState(gameWithUpdatedTimer, GameState.VOTE);
             return;
         }

@@ -1,15 +1,17 @@
 package com.brettstine.social_game_backend.dto;
 
+import com.brettstine.social_game_backend.model.PlayerModel;
+
 public class QuestionDTO {
     
     private String content;
     private String questionId;
-    private String playerName;
+    private PlayerDTO player;
 
-    public QuestionDTO(String content, String questionId, String playerName) {
+    public QuestionDTO(String content, String questionId, PlayerModel playerModel) {
         this.content = content;
         this.questionId = questionId;
-        this.playerName = playerName;
+        this.player = new PlayerDTO(playerModel);
     }
 
     public String getContent() {
@@ -28,12 +30,12 @@ public class QuestionDTO {
         this.questionId = questionId;
     }
 
-    public String getPlayerName() {
-        return this.playerName;
+    public PlayerDTO getPlayer() {
+        return this.player;
     }
 
-    public void setPlayerName(String playerName) {
-        this.playerName = playerName;
+    public void setPlayer(PlayerModel playerModel) {
+        this.player = new PlayerDTO(playerModel);
     }
 
 }

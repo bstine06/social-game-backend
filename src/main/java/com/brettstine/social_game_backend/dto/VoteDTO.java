@@ -1,31 +1,23 @@
 package com.brettstine.social_game_backend.dto;
 
+import com.brettstine.social_game_backend.model.PlayerModel;
+
 public class VoteDTO {
     
-    private String playerId;
-    private String playerName;
+    private PlayerDTO player;
     private String answerId;
 
-    public VoteDTO(String playerId, String playerName, String answerId) {
-        this.playerId = playerId;
-        this.playerName = playerName;
+    public VoteDTO(PlayerModel playerModel, String answerId) {
+        this.player = new PlayerDTO(playerModel);
         this.answerId = answerId;
     }
 
-    public String getPlayerId() {
-        return this.playerId;
+    public PlayerDTO getPlayer() {
+        return this.player;
     }
 
-    public void setPlayerId(String playerId) {
-        this.playerId = playerId;
-    }
-
-    public String getPlayerName() {
-        return this.playerName;
-    }
-
-    public void setPlayerName(String playerName) {
-        this.playerName = playerName;
+    public void setPlayer(PlayerDTO playerModel) {
+        this.player = playerModel;
     }
 
     public String getAnswerId() {

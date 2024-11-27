@@ -51,7 +51,9 @@ public class QuestionService {
         List<QuestionModel> questions = questionAssignmentRepository.findQuestionsAssignedToPlayer(player);
         List<QuestionDTO> questionDTOs = questions.stream()
                 .filter(question -> !answeredQuestionIds.contains(question.getQuestionId()))
-                .map((question) -> new QuestionDTO(question.getContent(), question.getQuestionId(), question.getPlayer().getName()))
+                .map((question) -> {
+                    return new QuestionDTO(question.getContent(), question.getQuestionId(), question.getPlayer());
+                })
                 .collect(Collectors.toList());
         return questionDTOs;
     }
@@ -75,6 +77,10 @@ public class QuestionService {
 
     public boolean isQuestionAssignedToPlayer(PlayerModel player, QuestionModel question) {
         return questionAssignmentRepository.isQuestionAssignedToPlayer(player, question);
+    }
+
+    public List<PlayerModel> getPlayersAssignedToQuestion(QuestionModel question) {
+        return questionAssignmentRepository.findPlayersAssignedToQuestion(question);
     }
 
 }

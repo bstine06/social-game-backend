@@ -32,5 +32,9 @@ public interface QuestionAssignmentRepository extends JpaRepository<QuestionAssi
 
     @Query("SELECT qAss.question FROM QuestionAssignmentModel qAss WHERE qAss.player = :player")
     List<QuestionModel> findQuestionsAssignedToPlayer(@Param("player") PlayerModel player);
+
+    @Query("SELECT qAss.player FROM QuestionAssignmentModel qAss WHERE qAss.question = :question")
+    List<PlayerModel> findPlayersAssignedToQuestion(@Param("question") QuestionModel question);
+
 }
 

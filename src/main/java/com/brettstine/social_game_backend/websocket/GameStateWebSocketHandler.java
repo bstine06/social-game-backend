@@ -111,7 +111,8 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
     
 
     private void broadcastToAllInGame(String gameId, String message) {
-        List<MessageQueue> queues = gameQueuesMap.getOrDefault(gameId, new ArrayList<>());
+        // Create a new ArrayList to avoid concurrent modification
+        List<MessageQueue> queues = new ArrayList<>(gameQueuesMap.getOrDefault(gameId, Collections.emptyList()));
         for (MessageQueue queue : queues) {
             queue.enqueue(new TextMessage(message));
         }

@@ -31,7 +31,7 @@ public class TimerExpiryService {
             Instant timerEnd = game.getTimerEnd();
             if (timerEnd != null && timerEnd.isBefore(Instant.now())) {
                 // If the timer has expired, update the game state
-                logger.info("GAME: {} : timer has expired, prompting advance game state...", game.getGameId());
+                logger.info("Game: {} : timer has expired, prompting advance game state...", game.getGameId());
                 gameFlowService.tryAdvanceGameState(game);
             }
         }

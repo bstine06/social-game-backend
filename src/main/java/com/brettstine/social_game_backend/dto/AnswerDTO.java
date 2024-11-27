@@ -1,17 +1,24 @@
 package com.brettstine.social_game_backend.dto;
 
+import com.brettstine.social_game_backend.model.PlayerModel;
+
 public class AnswerDTO {
     
     private String content;
     private String answerId;
-    private String playerId;
-    private String playerName;
+    private PlayerDTO player;
+    private boolean userSubmitted;
 
-    public AnswerDTO(String content, String answerId, String playerId, String playerName) {
+    public AnswerDTO(String content, String answerId, PlayerModel playerModel) {
         this.content = content;
         this.answerId = answerId;
-        this.playerId = playerId;
-        this.playerName = playerName;
+        this.player = new PlayerDTO(playerModel);
+        this.userSubmitted = true;
+    }
+
+    public AnswerDTO(PlayerModel player, boolean userSubmitted) {
+        this.player = new PlayerDTO(player);
+        this.userSubmitted = userSubmitted;
     }
 
     public String getContent() {
@@ -30,20 +37,20 @@ public class AnswerDTO {
         this.answerId = answerId;
     }
 
-    public String getPlayerId() {
-        return this.playerId;
+    public PlayerDTO getPlayer() {
+        return this.player;
     }
 
-    public void setPlayerId(String playerId) {
-        this.playerId = playerId;
+    public void setPlayer(PlayerModel playerModel) {
+        this.player = new PlayerDTO(playerModel);
     }
 
-    public String getPlayerName() {
-        return this.playerName;
+    public boolean isUserSubmitted() {
+        return this.userSubmitted;
     }
 
-    public void setPlayerName(String playerName) {
-        this.playerName = playerName;
+    public void setUserSubmitted(boolean userSubmitted) {
+        this.userSubmitted = userSubmitted;
     }
 
 }
