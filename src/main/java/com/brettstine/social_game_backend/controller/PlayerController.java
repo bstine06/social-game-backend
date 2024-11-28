@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -103,7 +104,7 @@ public class PlayerController {
     }
 
     @DeleteMapping
-    public ResponseEntity<?> deletePlayer(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<Map<String, String>> deletePlayer(HttpServletRequest request, HttpServletResponse response) {
         String playerId = CookieUtil.getDataFromCookie(request, "playerId");
         try {
             PlayerModel player = playerService.getPlayerById(playerId);
@@ -115,6 +116,26 @@ public class PlayerController {
             // websocket broadcast update
             gameFlowService.broadcastPlayersList(player.getGame());
 
+            gameFlowService.terminateGameIfPlayerDeletionIsGameBreaking(player.getGame());
+            return ResponseEntity.ok(Map.of("success", "deleted player"));
+        } catch (IllegalArgumentException e) {
+            logger.error("error deleting player", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "could not delete player", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("error deleting player", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "could not delete player", "message", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/id/{playerId}")
+    public ResponseEntity<Map<String, String>> deletePlayerById(@NonNull @PathVariable String playerId) {
+        try {
+            PlayerModel player = playerService.getPlayerById(playerId);
+            playerService.deletePlayerById(playerId);
+            logger.info("Game: {} : Successfully removed player with id: {}", player.getGameId(), playerId);
+
+            // websocket broadcast update
+            gameFlowService.broadcastPlayersList(player.getGame());
             gameFlowService.terminateGameIfPlayerDeletionIsGameBreaking(player.getGame());
             return ResponseEntity.ok(Map.of("success", "deleted player"));
         } catch (IllegalArgumentException e) {
