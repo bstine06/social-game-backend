@@ -18,6 +18,7 @@ import com.brettstine.social_game_backend.model.GameModel;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -90,6 +91,20 @@ public class CleanupService {
             } else {
                 logger.info("No old games found for deletion.");
             }
+        } catch (Exception e) {
+            logger.error("Error occurred during game cleanup: " + e.getMessage(), e);
+        }
+    }
+
+    public void cleanUpAtEndOfRound(GameModel game) {
+        List<GameModel> resetGame = new ArrayList<>();
+        resetGame.add(game);
+        try {
+            questionAssignmentRepository.deleteByGames(resetGame);
+            playerAnswerVoteRepository.deleteByGames(resetGame);
+            answerRepository.deleteByGames(resetGame);
+            questionRepository.deleteByGames(resetGame);
+            logger.info("Clean up: deleted round-level records for game with ID: {}", game.getGameId());
         } catch (Exception e) {
             logger.error("Error occurred during game cleanup: " + e.getMessage(), e);
         }

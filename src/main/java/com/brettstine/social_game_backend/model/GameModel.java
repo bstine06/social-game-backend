@@ -66,7 +66,15 @@ public class GameModel {
         this.gameId = gameId;
         this.creationTime = Instant.now();
         this.hostId = UUID.randomUUID().toString();
-        this.timerDuration = 60;
+        this.timerDuration = 90;
+    }
+
+    public GameModel(String gameId, long timerDuration) {
+        this.gameState = GameState.LOBBY;
+        this.gameId = gameId;
+        this.creationTime = Instant.now();
+        this.hostId = UUID.randomUUID().toString();
+        this.timerDuration = timerDuration;
     }
 
     public String getGameId() {

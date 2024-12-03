@@ -23,8 +23,9 @@ public class GameFlowService {
 
     private static final Logger logger = LoggerFactory.getLogger(GameFlowService.class);
 
-    private final long TIME_DURATION_DISPLAY_BALLOT = 6;
-    private final long TIME_DURATION_DISPLAY_VOTES = 30;
+    private final long TIME_DURATION_DISPLAY_BALLOT = 4;
+    private final long TIME_DURATION_DISPLAY_VOTES = 10;
+    private final long TIME_DURATION_DISPLAY_SCORE = 30;
 
     private final GameService gameService;
     private final PlayerService playerService;
@@ -33,6 +34,7 @@ public class GameFlowService {
     private final VoteService voteService;
     private final GameStateWebSocketHandler gameStateWebSocketHandler;
     private final WatchPlayersWebSocketHandler watchPlayersWebSocketHandler;
+    private final CleanupService cleanupService;
 
     public GameFlowService(GameService gameService,
             PlayerService playerService,
@@ -40,7 +42,8 @@ public class GameFlowService {
             AnswerService answerService,
             VoteService voteService,
             GameStateWebSocketHandler gameStateWebSocketHandler,
-            WatchPlayersWebSocketHandler watchPlayersWebSocketHandler) {
+            WatchPlayersWebSocketHandler watchPlayersWebSocketHandler,
+            CleanupService cleanupService) {
         this.gameService = gameService;
         this.playerService = playerService;
         this.questionService = questionService;
@@ -48,10 +51,7 @@ public class GameFlowService {
         this.voteService = voteService;
         this.gameStateWebSocketHandler = gameStateWebSocketHandler;
         this.watchPlayersWebSocketHandler = watchPlayersWebSocketHandler;
-    }
-
-    public GameModel createGame() {
-        return gameService.createGame();
+        this.cleanupService = cleanupService;
     }
 
     // method to ensure no more than 10 players are added to a game
@@ -166,7 +166,8 @@ public class GameFlowService {
             if (unvotedQuestion == null) {
                 // This means every ballot has been voted on
                 // Advance game to the scoring phase
-                setGameState(game, GameState.SCORE);
+                GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_DISPLAY_SCORE);
+                setGameState(gameWithUpdatedTimer, GameState.SCORE);
                 return;
             }
             if (voteService.canQuestionReceiveVotes(unvotedQuestion)) {
@@ -206,6 +207,11 @@ public class GameFlowService {
             setGameState(game, GameState.FIND_BALLOT);
             tryAdvanceGameState(game);
             return;
+        }
+        if (game.getGameState() == GameState.SCORE) {
+            cleanupService.cleanUpAtEndOfRound(game);
+            GameModel gameWithUpdatedTimer = gameService.disableTimer(game);
+            setGameState(gameWithUpdatedTimer, GameState.LOBBY);
         }
     }
 

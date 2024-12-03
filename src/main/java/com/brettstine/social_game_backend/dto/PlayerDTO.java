@@ -8,12 +8,14 @@ public class PlayerDTO {
     private String playerId;
     private int shape;
     private String color;
+    private int score;
 
-    public PlayerDTO(String name, String playerId, int shape, String color) {
+    public PlayerDTO(String name, String playerId, int shape, String color, int score) {
         this.name = name;
         this.playerId = playerId;
         this.shape = shape;
         this.color = color;
+        this.score = score;
     }
 
     public PlayerDTO(PlayerModel player) {
@@ -21,6 +23,7 @@ public class PlayerDTO {
         this.playerId = player.getPlayerId();
         this.shape = player.getShape();
         this.color = player.getColor();
+        this.score = player.getScore();
     }
 
     public String getName() {
@@ -54,5 +57,12 @@ public class PlayerDTO {
     public void setColor(String color) {
         this.color = color;
     }
-    
+
+    public int getScore() {
+        return this.score;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
+    }
 }

@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import com.brettstine.social_game_backend.dto.GameOptionsDTO;
 import com.brettstine.social_game_backend.model.GameDeletionReason;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.service.GameFlowService;
@@ -47,6 +49,25 @@ public class GameController {
     public ResponseEntity<?> createGame(HttpServletResponse response) {
         try {
             GameModel game = gameService.createGame();
+            logger.info("Game: {} : Successfully created game", game.getGameId());
+
+            String hostId = game.getHostId();
+            CookieUtil.setHttpCookie(response, "hostId", hostId, 7200);
+            logger.info("Host cookie set with ID: {}", hostId);
+            
+            return ResponseEntity.ok(game);
+        } catch (Exception e) {
+            logger.error("Error creating game: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "could not create game", "message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/custom")
+    public ResponseEntity<?> createGame(HttpServletResponse response, @RequestBody GameOptionsDTO gameOptions) {
+        try {
+            long timerDuration = gameOptions.getTimerDuration();
+            GameModel game = gameService.createGame(timerDuration);
             logger.info("Game: {} : Successfully created game", game.getGameId());
 
             String hostId = game.getHostId();

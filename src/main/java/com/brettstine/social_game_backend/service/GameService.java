@@ -27,6 +27,10 @@ public class GameService {
     }
 
     public GameModel createGame() {
+        return createGame(90);
+    }
+
+    public GameModel createGame(long timerDuration) {
         String gameCode = GameCodeGenerator.generateGameCode();
         int attempts = 0;
         int maxAttempts = 100; // Limit number of tries to find a game code.
@@ -42,7 +46,7 @@ public class GameService {
             attempts++;
         }
 
-        GameModel game = new GameModel(gameCode);
+        GameModel game = new GameModel(gameCode, timerDuration);
 
         logger.info("Storing a new game record with id: {}", gameCode);
         return gameRepository.save(game);
@@ -106,8 +110,12 @@ public class GameService {
             return setTimerEnd(game, newTime);
     }
 
+    public GameModel disableTimer(GameModel game) {
+        return setTimerEnd(game, null);
+    }
+
     @Transactional
-    public GameModel setTimerEnd(GameModel game, Instant time) {
+    private GameModel setTimerEnd(GameModel game, Instant time) {
         GameModel managedGame = gameRepository.findById(game.getGameId())
             .orElseThrow(() -> new IllegalArgumentException("No game found with ID: " + game.getGameId()));
         managedGame.setTimerEnd(time);
