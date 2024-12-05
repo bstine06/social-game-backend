@@ -67,10 +67,14 @@ public class GameController {
     public ResponseEntity<?> createGame(HttpServletResponse response, @RequestBody GameOptionsDTO gameOptions) {
         try {
             long timerDuration = gameOptions.getTimerDuration();
+            boolean isHostPlayer = gameOptions.isHostPlayer();
             GameModel game = gameService.createGame(timerDuration);
             logger.info("Game: {} : Successfully created game", game.getGameId());
 
             String hostId = game.getHostId();
+            if (isHostPlayer) {
+                CookieUtil.setHttpCookie(response, "hostPlayerCreation", "true", 7200);
+            }
             CookieUtil.setHttpCookie(response, "hostId", hostId, 7200);
             logger.info("Host cookie set with ID: {}", hostId);
             

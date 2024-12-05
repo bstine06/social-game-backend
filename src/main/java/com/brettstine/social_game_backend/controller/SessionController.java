@@ -34,23 +34,46 @@ public class SessionController {
     public ResponseEntity<Map<String,String>> getSessionRole(HttpServletRequest request, HttpServletResponse response) {
         
         String optionalHostId = CookieUtil.getDataFromCookie(request, "hostId");
-        String optionalPlayerId=CookieUtil.getDataFromCookie(request, "playerId");
+        String optionalPlayerId = CookieUtil.getDataFromCookie(request, "playerId");
 
-        if (optionalPlayerId != null) {
+        ResponseEntity<Map<String,String>> responseEntity = ResponseEntity.ok(Map.of("role", "UNASSIGNED"));
+
+        if (CookieUtil.getDataFromCookie(request, "hostPlayerCreation") != null) {
             try {
-                fetchService.getPlayerById(optionalPlayerId);
-                return ResponseEntity.ok(Map.of("role", "PLAYER"));
+                fetchService.getGameByHostId(optionalHostId).getGameId();
+                responseEntity = ResponseEntity.ok(Map.of("role", "HOSTPLAYER_CREATION"));
+            } catch (Exception e) {
+                logger.info("Caught non-problematic exception: no game found with host id: {}", optionalHostId);
+                CookieUtil.deleteCookie(response, "hostId");
+                logger.info("Deleted stale host cookie with id: {}", optionalHostId);
+            }
+        } else if (optionalPlayerId != null) {
+            try {
+                String playerGameId = fetchService.getPlayerById(optionalPlayerId).getGameId();
+                responseEntity = ResponseEntity.ok(Map.of("role", "PLAYER"));
+                if (optionalHostId != null) {
+                    try {
+                        String hostGameId = fetchService.getGameByHostId(optionalHostId).getGameId();
+                        if (playerGameId.equals(hostGameId)) {
+                            responseEntity = ResponseEntity.ok(Map.of("role", "HOSTPLAYER"));
+                        } else {
+                            responseEntity = ResponseEntity.ok(Map.of("role", "HOST"));
+                        }
+                    } catch (IllegalArgumentException e) {
+                        logger.info("Caught non-problematic exception: no game found with host id: {}", optionalHostId);
+                        CookieUtil.deleteCookie(response, "hostId");
+                        logger.info("Deleted stale host cookie with id: {}", optionalHostId);
+                    }
+                }
             } catch (IllegalArgumentException e) {
                 logger.info("Caught non-problematic exception: no player found with id: {}", optionalPlayerId);
                 CookieUtil.deleteCookie(response, "playerId");
                 logger.info("Deleted stale player cookie with id: {}", optionalPlayerId);
             }
-        }
-
-        if (optionalHostId != null) {
+        } else if (optionalHostId != null) {
             try {
                 fetchService.getGameByHostId(optionalHostId);
-                return ResponseEntity.ok(Map.of("role", "HOST"));
+                responseEntity = ResponseEntity.ok(Map.of("role", "HOST"));
             } catch (IllegalArgumentException e) {
                 logger.info("Caught non-problematic exception: no game found with host id: {}", optionalHostId);
                 CookieUtil.deleteCookie(response, "hostId");
@@ -58,7 +81,7 @@ public class SessionController {
             }
         }
 
-        return ResponseEntity.ok(Map.of("role", "UNASSIGNED"));
+        return responseEntity;
 
     }
 

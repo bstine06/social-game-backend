@@ -50,7 +50,7 @@ public class PlayerController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createPlayerAndAddToGame(HttpServletResponse response, @RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> createPlayerAndAddToGame(HttpServletRequest request, HttpServletResponse response, @RequestBody Map<String, String> payload) {
         String name = payload.get("name");
         String gameId = payload.get("gameId");
         String shape = payload.get("shape");
@@ -68,7 +68,11 @@ public class PlayerController {
             String playerId = player.getPlayerId();
             logger.info("Game: {} : Player created with ID: {}, name: {}", gameId, playerId, name);
 
-            CookieUtil.setHttpCookie(response, "playerId", playerId, 7200);;
+            if (CookieUtil.getDataFromCookie(request, "hostPlayerCreation") != null) {
+                CookieUtil.deleteCookie(response, "hostPlayerCreation");
+                logger.info("Deleted hostPlayerCreation cookie");
+            }
+            CookieUtil.setHttpCookie(response, "playerId", playerId, 7200);
             logger.info("Player cookie set with ID: {}", playerId);
 
             // websocket broadcast update
