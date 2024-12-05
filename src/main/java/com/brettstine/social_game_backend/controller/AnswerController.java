@@ -21,6 +21,7 @@ import com.brettstine.social_game_backend.model.QuestionModel;
 import com.brettstine.social_game_backend.service.AnswerService;
 import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.service.GameFlowService;
+import com.brettstine.social_game_backend.service.SanitizationService;
 import com.brettstine.social_game_backend.service.ValidationService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
@@ -40,12 +41,15 @@ public class AnswerController {
     private final GameFlowService gameFlowService;
     private final FetchService fetchService;
     private final ValidationService validationService;
+    private final SanitizationService sanitizationService;
 
-    public AnswerController(AnswerService answerService, GameFlowService gameFlowService, FetchService fetchService, ValidationService validationService) {
+    public AnswerController(AnswerService answerService, GameFlowService gameFlowService, FetchService fetchService,
+            ValidationService validationService, SanitizationService sanitizationService) {
         this.answerService = answerService;
         this.gameFlowService = gameFlowService;
         this.fetchService = fetchService;
         this.validationService = validationService;
+        this.sanitizationService = sanitizationService;
     }
 
     @GetMapping("/get-answer")
@@ -116,7 +120,8 @@ public class AnswerController {
             validationService.ensureGameState(game, GameState.ANSWER);
             validationService.validatePlayer(player, game);
             validationService.validatePlayerCanAnswerThisQuestion(player, question);
-            AnswerModel answer = answerService.submitAnswer(game, player, question, answerContent);
+            String sanitizedAnswerContent = sanitizationService.sanitizeForHtml(answerContent);
+            AnswerModel answer = answerService.submitAnswer(game, player, question, sanitizedAnswerContent);
             logger.info("Game: {} : Successfully submitted answer with id: {}", gameId, answer.getAnswerId());
             if (!validationService.doesPlayerHaveUnansweredQuestions(player)) {
                 gameFlowService.setPlayerReady(player, true);

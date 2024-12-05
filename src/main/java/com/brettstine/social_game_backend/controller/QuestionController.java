@@ -21,6 +21,7 @@ import com.brettstine.social_game_backend.model.QuestionModel;
 import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.QuestionService;
+import com.brettstine.social_game_backend.service.SanitizationService;
 import com.brettstine.social_game_backend.service.ValidationService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 import com.brettstine.social_game_backend.dto.QuestionDTO;
@@ -41,12 +42,15 @@ public class QuestionController {
     private final GameFlowService gameFlowService;
     private final FetchService fetchService;
     private final ValidationService validationService;
+    private final SanitizationService sanitizationService;
 
-    public QuestionController(QuestionService questionService, GameFlowService gameFlowService, FetchService fetchService, ValidationService validationService) {
+    public QuestionController(QuestionService questionService, GameFlowService gameFlowService,
+            FetchService fetchService, ValidationService validationService, SanitizationService sanitizationService) {
         this.questionService = questionService;
         this.gameFlowService = gameFlowService;
         this.fetchService = fetchService;
         this.validationService = validationService;
+        this.sanitizationService = sanitizationService;
     }
 
     @GetMapping("/get-question")
@@ -91,11 +95,12 @@ public class QuestionController {
         String questionContent = payload.get("question");
         String playerId = CookieUtil.getDataFromCookie(request, "playerId");
         try {
+            String sanitizedQuestionContent = sanitizationService.sanitizeForHtml(questionContent);
             GameModel game = fetchService.getGameById(gameId);
             PlayerModel player = fetchService.getPlayerById(playerId);
             validationService.ensureGameState(game, GameState.QUESTION);
             validationService.validatePlayerCanSubmitQuestion(player);
-            QuestionModel question = questionService.submitQuestion(game, player, questionContent);
+            QuestionModel question = questionService.submitQuestion(game, player, sanitizedQuestionContent);
             logger.info("Game: {} : Successfully submitted question with id: {}", gameId, question.getQuestionId());
             gameFlowService.setPlayerReady(player, true);
             gameFlowService.tryAdvanceGameState(game);

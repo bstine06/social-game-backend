@@ -6,6 +6,7 @@ import com.brettstine.social_game_backend.model.PlayerModel;
 import com.brettstine.social_game_backend.service.FetchService;
 import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.PlayerService;
+import com.brettstine.social_game_backend.service.SanitizationService;
 import com.brettstine.social_game_backend.service.ValidationService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
 
@@ -41,12 +42,15 @@ public class PlayerController {
     private final GameFlowService gameFlowService;
     private final FetchService fetchService;
     private final ValidationService validationService;
+    private final SanitizationService sanitizationService;
 
-    public PlayerController(PlayerService playerService, GameFlowService gameFlowService, FetchService fetchService, ValidationService validationService) {
+    public PlayerController(PlayerService playerService, GameFlowService gameFlowService, FetchService fetchService,
+            ValidationService validationService, SanitizationService sanitizationService) {
         this.playerService = playerService;
         this.gameFlowService = gameFlowService;
         this.fetchService = fetchService;
         this.validationService = validationService;
+        this.sanitizationService = sanitizationService;
     }
 
     @PostMapping
@@ -59,23 +63,25 @@ public class PlayerController {
         String optionalHostId = CookieUtil.getDataFromCookie(request, "hostId");
 
         try {
+            String sanitizedName = sanitizationService.sanitizeForHtml(name);
+            String sanitizedShape = sanitizationService.sanitizeForHtml(shape);
+            String sanitizedColor = sanitizationService.sanitizeForHtml(color);
             GameModel game = fetchService.getGameById(gameId);
             gameFlowService.checkMaximumPlayersForGame(game);
             validationService.ensureGameState(game, GameState.LOBBY);
 
-            if (shape == null) shape = "1";
-            if (color == null) color = "1";
+            if (shape == null || !sanitizedShape.equals(shape)) shape = "1";
+            if (color == null || !sanitizedColor.equals(color)) color = "1";
 
             // if this request is coming from a host, create a player with id identical to host id
             PlayerModel player;
-            logger.info("HOST ID: {}", optionalHostId);
             if (optionalHostId != null) {
-                player = playerService.createPlayer(game, name, Integer.parseInt(shape), color, optionalHostId);
+                player = playerService.createPlayer(game, sanitizedName, Integer.parseInt(sanitizedShape), sanitizedColor, optionalHostId);
             } else {
-                player = playerService.createPlayer(game, name, Integer.parseInt(shape), color);
+                player = playerService.createPlayer(game, sanitizedName, Integer.parseInt(sanitizedShape), sanitizedColor);
             }
             String playerId = player.getPlayerId();
-            logger.info("Game: {} : Player created with ID: {}, name: {}", gameId, playerId, name);
+            logger.info("Game: {} : Player created with ID: {}, name: {}", gameId, playerId, sanitizedName);
 
             if (CookieUtil.getDataFromCookie(request, "hostPlayerCreation") != null) {
                 CookieUtil.deleteCookie(response, "hostPlayerCreation");
