@@ -27,10 +27,11 @@ public class GameService {
     }
 
     public GameModel createGame() {
-        return createGame(90);
+        return createGame(90, false);
     }
 
-    public GameModel createGame(long timerDuration) {
+    public GameModel createGame(long timerDuration, boolean isHostPlayer) {
+        
         String gameCode = GameCodeGenerator.generateGameCode();
         int attempts = 0;
         int maxAttempts = 100; // Limit number of tries to find a game code.
@@ -46,7 +47,7 @@ public class GameService {
             attempts++;
         }
 
-        GameModel game = new GameModel(gameCode, timerDuration);
+        GameModel game = new GameModel(gameCode, timerDuration, isHostPlayer);
 
         logger.info("Storing a new game record with id: {}", gameCode);
         return gameRepository.save(game);

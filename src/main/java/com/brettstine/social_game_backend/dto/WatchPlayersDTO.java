@@ -26,6 +26,10 @@ public class WatchPlayersDTO {
         }
     }
 
+    public void addPlayer(PlayerDTO player, boolean readyStatus, String hostPlayerId) {
+        this.players.add(new PlayerStatusDTO(player, readyStatus, player.getPlayerId().equals(hostPlayerId)));
+    }
+
     // Nested DTO to represent Player and Ready status
     public static class PlayerStatusDTO {
         private PlayerDTO player;

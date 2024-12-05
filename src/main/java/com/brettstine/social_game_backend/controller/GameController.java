@@ -68,7 +68,7 @@ public class GameController {
         try {
             long timerDuration = gameOptions.getTimerDuration();
             boolean isHostPlayer = gameOptions.isHostPlayer();
-            GameModel game = gameService.createGame(timerDuration);
+            GameModel game = gameService.createGame(timerDuration, isHostPlayer);
             logger.info("Game: {} : Successfully created game", game.getGameId());
 
             String hostId = game.getHostId();

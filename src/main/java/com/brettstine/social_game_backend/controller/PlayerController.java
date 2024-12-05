@@ -56,6 +56,8 @@ public class PlayerController {
         String shape = payload.get("shape");
         String color = payload.get("color");
 
+        String optionalHostId = CookieUtil.getDataFromCookie(request, "hostId");
+
         try {
             GameModel game = fetchService.getGameById(gameId);
             gameFlowService.checkMaximumPlayersForGame(game);
@@ -64,7 +66,14 @@ public class PlayerController {
             if (shape == null) shape = "1";
             if (color == null) color = "1";
 
-            PlayerModel player = playerService.createPlayer(game, name, Integer.parseInt(shape), color);
+            // if this request is coming from a host, create a player with id identical to host id
+            PlayerModel player;
+            logger.info("HOST ID: {}", optionalHostId);
+            if (optionalHostId != null) {
+                player = playerService.createPlayer(game, name, Integer.parseInt(shape), color, optionalHostId);
+            } else {
+                player = playerService.createPlayer(game, name, Integer.parseInt(shape), color);
+            }
             String playerId = player.getPlayerId();
             logger.info("Game: {} : Player created with ID: {}, name: {}", gameId, playerId, name);
 

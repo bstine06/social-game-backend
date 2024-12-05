@@ -58,6 +58,9 @@ public class GameModel {
     @Column(name = "timer_end")
     private Instant timerEnd;
 
+    @Column(name = "is_host_player")
+    private boolean isHostPlayer;
+
     public GameModel() {
     }
 
@@ -67,14 +70,16 @@ public class GameModel {
         this.creationTime = Instant.now();
         this.hostId = UUID.randomUUID().toString();
         this.timerDuration = 90;
+        this.isHostPlayer = false;
     }
 
-    public GameModel(String gameId, long timerDuration) {
+    public GameModel(String gameId, long timerDuration, boolean isHostPlayer) {
         this.gameState = GameState.LOBBY;
         this.gameId = gameId;
         this.creationTime = Instant.now();
         this.hostId = UUID.randomUUID().toString();
         this.timerDuration = timerDuration;
+        this.isHostPlayer = isHostPlayer;
     }
 
     public String getGameId() {
@@ -152,5 +157,13 @@ public class GameModel {
 
     public void setTimerEnd(Instant time) {
         this.timerEnd = time;
+    }
+
+    public boolean isHostPlayer() {
+        return this.isHostPlayer;
+    }
+
+    public void setIsHostPlayer(boolean isHostPlayer) {
+        this.isHostPlayer = isHostPlayer;
     }
 }

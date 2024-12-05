@@ -88,7 +88,12 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
         WatchPlayersDTO watchPlayersDTO = new WatchPlayersDTO();
         playersInGame.stream().forEach(player -> {
             boolean readyStatus = player.isReady();
-            watchPlayersDTO.addPlayer(new PlayerDTO(player), readyStatus);
+            if (game.isHostPlayer()) {
+                watchPlayersDTO.addPlayer(new PlayerDTO(player), readyStatus, game.getHostId());
+            } else {
+                watchPlayersDTO.addPlayer(new PlayerDTO(player), readyStatus);
+            }
+            
         });
 
         String message = objectMapper.writeValueAsString(watchPlayersDTO);

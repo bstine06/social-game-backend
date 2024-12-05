@@ -82,6 +82,17 @@ public class PlayerModel {
         this.ready = false;
     }
 
+    public PlayerModel(GameModel game, String name, int shape, String color, String playerId) {
+        this.playerId = playerId;
+        this.game = game;
+        this.name = name;
+        this.shape = shape;
+        this.color = color;
+        this.creationTime = Instant.now();
+        this.score = 0;
+        this.ready = false;
+    }
+
     // Getters and Setters
     public GameModel getGame() {
         return game;

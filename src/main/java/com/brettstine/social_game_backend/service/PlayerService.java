@@ -23,6 +23,12 @@ public class PlayerService {
         return player;
     }
 
+    public PlayerModel createPlayer(GameModel game, String name, int shape, String color, String playerId) {
+        PlayerModel player = new PlayerModel(game, name, shape, color, playerId);
+        player = playerRepository.save(player);
+        return player;
+    }
+
     public PlayerModel getPlayerById(String playerId) {
         return playerRepository.findById(playerId).orElseThrow(() -> new IllegalArgumentException("Player not found with ID: " + playerId));
     }
