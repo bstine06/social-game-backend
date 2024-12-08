@@ -69,6 +69,8 @@ public class PlayerController {
             GameModel game = fetchService.getGameById(gameId);
             gameFlowService.checkMaximumPlayersForGame(game);
             validationService.ensureGameState(game, GameState.LOBBY);
+            validationService.validateNameLength(name);
+            validationService.ensureGameCanAcceptPlayer(game, optionalHostId);
 
             if (shape == null || !sanitizedShape.equals(shape)) shape = "1";
             if (color == null || !sanitizedColor.equals(color)) color = "1";
@@ -95,10 +97,10 @@ public class PlayerController {
 
             return ResponseEntity.ok(player);
         } catch (IllegalArgumentException e) {
-            logger.error("Error creating player", e);
+            logger.warn("Error creating player: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "could not create player", "message", e.getMessage()));
         } catch (IllegalStateException e) {
-            logger.error("Error creating player", e);
+            logger.warn("Error creating player: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "could not create player", "message", e.getMessage()));
         } catch (Exception e) {
             logger.error("Error creating player", e);

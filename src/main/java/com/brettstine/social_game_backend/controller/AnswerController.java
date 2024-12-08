@@ -119,6 +119,7 @@ public class AnswerController {
             QuestionModel question = fetchService.getQuestionById(questionId);
             validationService.ensureGameState(game, GameState.ANSWER);
             validationService.validatePlayer(player, game);
+            validationService.validateConversationInputLength(answerContent);
             validationService.validatePlayerCanAnswerThisQuestion(player, question);
             String sanitizedAnswerContent = sanitizationService.sanitizeForHtml(answerContent);
             AnswerModel answer = answerService.submitAnswer(game, player, question, sanitizedAnswerContent);

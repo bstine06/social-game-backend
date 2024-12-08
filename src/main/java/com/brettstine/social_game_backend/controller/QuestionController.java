@@ -99,6 +99,7 @@ public class QuestionController {
             GameModel game = fetchService.getGameById(gameId);
             PlayerModel player = fetchService.getPlayerById(playerId);
             validationService.ensureGameState(game, GameState.QUESTION);
+            validationService.validateConversationInputLength(questionContent);
             validationService.validatePlayerCanSubmitQuestion(player);
             QuestionModel question = questionService.submitQuestion(game, player, sanitizedQuestionContent);
             logger.info("Game: {} : Successfully submitted question with id: {}", gameId, question.getQuestionId());
