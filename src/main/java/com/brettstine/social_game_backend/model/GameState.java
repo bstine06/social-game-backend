@@ -2,9 +2,12 @@ package com.brettstine.social_game_backend.model;
 
 public enum GameState {
     LOBBY,
+    PRE_QUESTION,
     QUESTION,
     ASSIGN, 
+    PRE_ANSWER,
     ANSWER,
+    PRE_VOTE,
     FIND_BALLOT,
     DISPLAY_BALLOT,
     VOTE, 

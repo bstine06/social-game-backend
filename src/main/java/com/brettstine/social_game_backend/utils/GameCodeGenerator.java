@@ -4,7 +4,7 @@ import java.security.SecureRandom;
 
 public class GameCodeGenerator {
 
-    private static final String CHAR_POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
+    private static final String CHAR_POOL = "ABCDEFGHJKLMNPQRSTUVWXYZ123456789";
     private static final int CODE_LENGTH = 4;
     private static final SecureRandom random = new SecureRandom();
 
