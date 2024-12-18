@@ -104,12 +104,16 @@ public class ValidationService {
     public void validateNameLength(String nameInput) {
         if (nameInput.length() > maxNameInputLength) {
             throw new IllegalArgumentException("Name input length may not exceed " + maxNameInputLength + " characters");
+        } else if (nameInput.length() <= 0) {
+            throw new IllegalArgumentException("Name input must be longer than 0 characters");
         }
     }
 
     public void validateConversationInputLength(String conversationInput) {
         if (conversationInput.length() > maxConversationInputLength) {
             throw new IllegalArgumentException("Conversation input length may not exceed " + maxConversationInputLength + " characters");
+        } else if (conversationInput.length() <= 0) {
+            throw new IllegalArgumentException("Conversation input must be longer than 0 characters");
         }
     }
 
@@ -131,7 +135,7 @@ public class ValidationService {
                     try {
                         playerService.getPlayerById(game.getHostId());  // Check if the host exists in the system
                     } catch (IllegalArgumentException e) {
-                        throw new IllegalStateException("Host is not a player yet and there is only one slot left. Another player cannot join.");
+                        throw new IllegalStateException("The host has not joined as a player yet and there is only one slot left. Another player cannot join.");
                     }
                 }
             }
