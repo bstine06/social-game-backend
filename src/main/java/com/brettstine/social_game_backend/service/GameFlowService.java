@@ -23,6 +23,7 @@ public class GameFlowService {
 
     private static final Logger logger = LoggerFactory.getLogger(GameFlowService.class);
 
+    private final long TIME_DURATION_PRE_QUESTION = 5;
     private final long TIME_DURATION_DISPLAY_BALLOT = 4;
     private final long TIME_DURATION_DISPLAY_VOTES = 10;
     private final long TIME_DURATION_DISPLAY_SCORE = 30;
@@ -110,8 +111,14 @@ public class GameFlowService {
 
         if (game.getGameState() == GameState.LOBBY) {
             checkMinimumPlayersForQuestionState(game); // Ensure there are enough players before transitioning
-            gameService.resetTimer(game);
-            setGameState(game, GameState.QUESTION);
+            gameService.resetTimerWithSeconds(game, TIME_DURATION_PRE_QUESTION);
+            setGameState(game, GameState.PRE_QUESTION);
+            logger.info("Game: {} : Advanced gameState to: {}", game.getGameId(), game.getGameState());
+            return;
+        }
+        if (game.getGameState() == GameState.PRE_QUESTION) {
+            GameModel gameWithUpdatedTimer = gameService.resetTimer(game);
+            setGameState(gameWithUpdatedTimer, GameState.QUESTION);
             logger.info("Game: {} : Advanced gameState to: {}", game.getGameId(), game.getGameState());
             return;
         }

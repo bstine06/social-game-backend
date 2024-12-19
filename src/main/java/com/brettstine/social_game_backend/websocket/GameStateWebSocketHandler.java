@@ -74,7 +74,8 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
         String message = objectMapper.writeValueAsString(new GameStateDTO(
             game.getGameId(),
             game.getGameState().toString(),
-            game.getTimerEnd() != null ? game.getTimerEnd().toString() : null
+            game.getTimerEnd() != null ? game.getTimerEnd().toString() : null,
+            game.getRoundCount()
         ));
         broadcastToAllInGame(game.getGameId(), message);
     }
@@ -84,7 +85,8 @@ public class GameStateWebSocketHandler extends TextWebSocketHandler {
             String message = objectMapper.writeValueAsString(new GameStateDTO(
                 gameId,
                 reason.toString(),
-                null
+                null,
+                0
             ));
             // Notify all clients in the game about the deletion reason
             broadcastToAllInGame(gameId, message);

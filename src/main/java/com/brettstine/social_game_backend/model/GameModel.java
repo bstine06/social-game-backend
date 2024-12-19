@@ -61,16 +61,10 @@ public class GameModel {
     @Column(name = "is_host_player")
     private boolean isHostPlayer;
 
-    public GameModel() {
-    }
+    @Column(name = "round_count")
+    private int roundCount;
 
-    public GameModel(String gameId) {
-        this.gameState = GameState.LOBBY;
-        this.gameId = gameId;
-        this.creationTime = Instant.now();
-        this.hostId = UUID.randomUUID().toString();
-        this.timerDuration = 90;
-        this.isHostPlayer = false;
+    public GameModel() {
     }
 
     public GameModel(String gameId, long timerDuration, boolean isHostPlayer) {
@@ -80,6 +74,11 @@ public class GameModel {
         this.hostId = UUID.randomUUID().toString();
         this.timerDuration = timerDuration;
         this.isHostPlayer = isHostPlayer;
+        this.roundCount = 0;
+    }
+
+    public GameModel(String gameId) {
+        this(gameId, 90, false);
     }
 
     public String getGameId() {
@@ -165,5 +164,13 @@ public class GameModel {
 
     public void setIsHostPlayer(boolean isHostPlayer) {
         this.isHostPlayer = isHostPlayer;
+    }
+
+    public int getRoundCount() {
+        return this.roundCount;
+    }
+
+    public void setRoundCount(int roundCount) {
+        this.roundCount = roundCount;
     }
 }

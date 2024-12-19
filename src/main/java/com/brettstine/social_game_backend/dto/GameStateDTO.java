@@ -5,12 +5,14 @@ public class GameStateDTO {
     private String gameId;
     private String gameState;
     private String timerEnd;
+    private int roundCount;
     
 
-    public GameStateDTO(String gameId, String gameState, String timerEnd) {
+    public GameStateDTO(String gameId, String gameState, String timerEnd, int roundCount) {
         this.gameId = gameId;
         this.gameState = gameState;
         this.timerEnd = timerEnd;
+        this.roundCount = roundCount;
     }
 
     public String getGameId() {
@@ -37,5 +39,12 @@ public class GameStateDTO {
         this.timerEnd = timerEnd;
     }
 
+    public int getRoundCount() {
+        return this.roundCount;
+    }
+
+    public void setRoundCount(int roundCount) {
+        this.roundCount = roundCount;
+    }
     
 }

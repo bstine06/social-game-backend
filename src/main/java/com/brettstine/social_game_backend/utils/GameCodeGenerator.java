@@ -24,10 +24,4 @@ public class GameCodeGenerator {
         }
         return code.toString();
     }
-
-    public static void main(String[] args) {
-        // Example of generating a game code
-        String gameCode = generateGameCode();
-        System.out.println("Generated game code: " + gameCode);
-    }
 }

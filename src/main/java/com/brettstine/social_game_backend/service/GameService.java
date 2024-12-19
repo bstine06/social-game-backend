@@ -79,6 +79,10 @@ public class GameService {
 
     public GameModel setGameState(GameModel game, GameState gameState) {
         game.setGameState(gameState);
+        // increment the round counter iff we're starting a new round
+        if (gameState == GameState.PRE_QUESTION) {
+            game.setRoundCount(game.getRoundCount() + 1);
+        }
         GameModel savedGame = gameRepository.save(game);
         return savedGame;
     }
