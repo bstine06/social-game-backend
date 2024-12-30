@@ -23,7 +23,7 @@ public class GameFlowService {
 
     private static final Logger logger = LoggerFactory.getLogger(GameFlowService.class);
 
-    private final long TIME_DURATION_PRE_QUESTION = 5;
+    private final long TIME_DURATION_INSTRUCTIONS = 9;
     private final long TIME_DURATION_DISPLAY_BALLOT = 4;
     private final long TIME_DURATION_DISPLAY_VOTES = 10;
     private final long TIME_DURATION_DISPLAY_SCORE = 30;
@@ -111,7 +111,7 @@ public class GameFlowService {
 
         if (game.getGameState() == GameState.LOBBY) {
             checkMinimumPlayersForQuestionState(game); // Ensure there are enough players before transitioning
-            gameService.resetTimerWithSeconds(game, TIME_DURATION_PRE_QUESTION);
+            gameService.resetTimerWithSeconds(game, TIME_DURATION_INSTRUCTIONS);
             setGameState(game, GameState.PRE_QUESTION);
             logger.info("Game: {} : Advanced gameState to: {}", game.getGameId(), game.getGameState());
             return;
@@ -133,8 +133,8 @@ public class GameFlowService {
                         game.getGameState());
                 assignQuestionsToPlayers(game);
                 logger.info("Game: {} : Successfully assigned questions", game.getGameId());
-                GameModel gameWithUpdatedTimer = gameService.resetTimer(game);
-                setGameState(gameWithUpdatedTimer, GameState.ANSWER);
+                GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_INSTRUCTIONS);
+                setGameState(gameWithUpdatedTimer, GameState.PRE_ANSWER);
                 logger.info("Game: {} : Advanced gameState to : {}", game.getGameId(), game.getGameState());
                 return;
             } else if (game.getTimerEnd().isBefore(Instant.now())) {
@@ -144,11 +144,17 @@ public class GameFlowService {
                 logger.info("Game: {} : auto-submitted questions for players who didn't submit", game.getGameId());
                 assignQuestionsToPlayers(game);
                 logger.info("Game: {} : Successfully assigned questions", game.getGameId());
-                GameModel gameWithUpdatedTimer = gameService.resetTimer(game);
-                setGameState(gameWithUpdatedTimer, GameState.ANSWER);
+                GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_INSTRUCTIONS);
+                setGameState(gameWithUpdatedTimer, GameState.PRE_ANSWER);
                 logger.info("Game: {} : Advanced gameState to : {}", game.getGameId(), game.getGameState());
                 return;
             }
+        }
+        if (game.getGameState() == GameState.PRE_ANSWER) {
+            GameModel gameWithUpdatedTimer = gameService.resetTimer(game);
+            setGameState(gameWithUpdatedTimer, GameState.ANSWER);
+            logger.info("Game: {} : Advanced gameState to: {}", game.getGameId(), game.getGameState());
+            return;
         }
         if (game.getGameState() == GameState.ANSWER) {
             // If all questions have recieved two answers, advance to the PRESENT phase
@@ -156,15 +162,22 @@ public class GameFlowService {
             boolean allQuestionsHaveTwoAnswers = questions.stream()
                     .allMatch(question -> answerService.hasTwoAnswers(question));
             if (allQuestionsHaveTwoAnswers) {
-                setGameState(game, GameState.FIND_BALLOT);
+                GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_INSTRUCTIONS);
+                setGameState(gameWithUpdatedTimer, GameState.PRE_VOTE);
                 logger.info("Game: {} : All questions received two answers, advanced gameState to : {}",
                         game.getGameId(), game.getGameState());
-                tryAdvanceGameState(game);
+                
             } else if (game.getTimerEnd().isBefore(Instant.now())) {
-                setGameState(game, GameState.FIND_BALLOT);
+                GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_INSTRUCTIONS);
+                setGameState(gameWithUpdatedTimer, GameState.PRE_VOTE);
                 logger.info("Game: {} : Timer expired before all players could submit answers, advanced gameState to: {}", game.getGameId(), game.getGameState());
-                tryAdvanceGameState(game);
             }
+            return;
+        }
+        if (game.getGameState() == GameState.PRE_VOTE) {
+            setGameState(game, GameState.FIND_BALLOT);
+            logger.info("Game: {} : Advanced gameState to: {}", game.getGameId(), game.getGameState());
+            tryAdvanceGameState(game);
             return;
         }
         if (game.getGameState() == GameState.FIND_BALLOT) {

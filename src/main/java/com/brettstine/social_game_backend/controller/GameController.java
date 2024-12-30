@@ -16,11 +16,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.brettstine.social_game_backend.dto.GameOptionsDTO;
+import com.brettstine.social_game_backend.dto.GameStateDTO;
 import com.brettstine.social_game_backend.model.GameDeletionReason;
 import com.brettstine.social_game_backend.model.GameModel;
 import com.brettstine.social_game_backend.service.GameFlowService;
 import com.brettstine.social_game_backend.service.GameService;
 import com.brettstine.social_game_backend.utils.CookieUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,92 +41,98 @@ public class GameController {
 
     private final GameService gameService;
     private final GameFlowService gameFlowService;
-
-    public GameController(GameService gameService, GameFlowService gameFlowService) {
-        this.gameService = gameService;
-        this.gameFlowService = gameFlowService;
-    }
-
-    @PostMapping
-    public ResponseEntity<?> createGame(HttpServletResponse response) {
-        try {
-            GameModel game = gameService.createGame();
-            logger.info("Game: {} : Successfully created game", game.getGameId());
-
-            String hostId = game.getHostId();
-            CookieUtil.setHttpCookie(response, "hostId", hostId, 7200);
-            logger.info("Host cookie set with ID: {}", hostId);
-            
-            return ResponseEntity.ok(game);
-        } catch (Exception e) {
-            logger.error("Error creating game: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "could not create game", "message", e.getMessage()));
+    
+        private final ObjectMapper objectMapper = new ObjectMapper();
+    
+        public GameController(GameService gameService, GameFlowService gameFlowService) {
+            this.gameService = gameService;
+            this.gameFlowService = gameFlowService;
         }
-    }
-
-    @PostMapping("/custom")
-    public ResponseEntity<?> createGame(HttpServletResponse response, @RequestBody GameOptionsDTO gameOptions) {
-        try {
-            long timerDuration = gameOptions.getTimerDuration();
-            boolean isHostPlayer = gameOptions.isHostPlayer();
-            GameModel game = gameService.createGame(timerDuration, isHostPlayer);
-            logger.info("Game: {} : Successfully created game", game.getGameId());
-
-            String hostId = game.getHostId();
-            if (isHostPlayer) {
-                CookieUtil.setHttpCookie(response, "hostPlayerCreation", "true", 7200);
+    
+        @PostMapping
+        public ResponseEntity<?> createGame(HttpServletResponse response) {
+            try {
+                GameModel game = gameService.createGame();
+                logger.info("Game: {} : Successfully created game", game.getGameId());
+    
+                String hostId = game.getHostId();
+                CookieUtil.setHttpCookie(response, "hostId", hostId, 7200);
+                logger.info("Host cookie set with ID: {}", hostId);
+                
+                return ResponseEntity.ok(game);
+            } catch (Exception e) {
+                logger.error("Error creating game: ", e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("error", "could not create game", "message", e.getMessage()));
             }
-            CookieUtil.setHttpCookie(response, "hostId", hostId, 7200);
-            logger.info("Host cookie set with ID: {}", hostId);
-            
-            return ResponseEntity.ok(game);
-        } catch (Exception e) {
-            logger.error("Error creating game: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "could not create game", "message", e.getMessage()));
         }
-    }
-
-    @DeleteMapping("/{gameId}")
-    public ResponseEntity<?> deleteGame(@PathVariable String gameId, HttpServletRequest request, HttpServletResponse response) {
-        try {
-            gameService.deleteGame(gameId);
-            logger.info("Game: {} : Successfully deleted game", gameId);
-            String hostId = CookieUtil.getDataFromCookie(request, "hostId");
-            CookieUtil.deleteCookie(response, "hostId");
-            logger.info("Deleted host cookie with id: {}", hostId);
-
-            gameFlowService.closeWebsocketsOnGameDeletion(gameId, GameDeletionReason.DELETED_BY_HOST);
-
-            return ResponseEntity.ok(Map.of("message", "Successfully deleted game", "gameId", gameId));
-        } catch (IllegalArgumentException e) {
-            logger.error("Game: {} : Error deleting game", gameId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "could not delete game", "message", e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Game: {} : Error deleting game", gameId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "could not delete game", "message", e.getMessage()));
+    
+        @PostMapping("/custom")
+        public ResponseEntity<?> createGame(HttpServletResponse response, @RequestBody GameOptionsDTO gameOptions) {
+            try {
+                long timerDuration = gameOptions.getTimerDuration();
+                boolean isHostPlayer = gameOptions.isHostPlayer();
+                GameModel game = gameService.createGame(timerDuration, isHostPlayer);
+                logger.info("Game: {} : Successfully created game", game.getGameId());
+    
+                String hostId = game.getHostId();
+                if (isHostPlayer) {
+                    CookieUtil.setHttpCookie(response, "hostPlayerCreation", "true", 7200);
+                }
+                CookieUtil.setHttpCookie(response, "hostId", hostId, 7200);
+                logger.info("Host cookie set with ID: {}", hostId);
+                
+                return ResponseEntity.ok(game);
+            } catch (Exception e) {
+                logger.error("Error creating game: ", e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("error", "could not create game", "message", e.getMessage()));
+            }
         }
-    }
-
-    @GetMapping("/{gameId}/state")
-    public ResponseEntity<?> getGameState(@PathVariable String gameId) {
-        try {
-            GameModel game = gameService.getGameById(gameId);
-            GameState gameState = gameService.getGameState(game);
-            logger.info("Game: {} : Successfully executed getState", gameId);
-            return ResponseEntity.ok(Map.of("gameState", gameState));
-        } catch (IllegalArgumentException e) {
-            logger.error("Game: {} : Error executing getState", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Could not get gameState", "message", e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Game: {} : Error executing getState", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Could not get gameState", "message", e.getMessage()));
+    
+        @DeleteMapping("/{gameId}")
+        public ResponseEntity<?> deleteGame(@PathVariable String gameId, HttpServletRequest request, HttpServletResponse response) {
+            try {
+                gameService.deleteGame(gameId);
+                logger.info("Game: {} : Successfully deleted game", gameId);
+                String hostId = CookieUtil.getDataFromCookie(request, "hostId");
+                CookieUtil.deleteCookie(response, "hostId");
+                logger.info("Deleted host cookie with id: {}", hostId);
+    
+                gameFlowService.closeWebsocketsOnGameDeletion(gameId, GameDeletionReason.DELETED_BY_HOST);
+    
+                return ResponseEntity.ok(Map.of("message", "Successfully deleted game", "gameId", gameId));
+            } catch (IllegalArgumentException e) {
+                logger.error("Game: {} : Error deleting game", gameId, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "could not delete game", "message", e.getMessage()));
+            } catch (Exception e) {
+                logger.error("Game: {} : Error deleting game", gameId, e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("error", "could not delete game", "message", e.getMessage()));
+            }
         }
+    
+        @GetMapping("/{gameId}/state")
+        public ResponseEntity<?> getGameState(@PathVariable String gameId) {
+            try {
+                GameModel game = gameService.getGameById(gameId);
+                String message = objectMapper.writeValueAsString(new GameStateDTO(
+                        game.getGameId(),
+                        game.getGameState().toString(),
+                        game.getTimerEnd() != null ? game.getTimerEnd().toString() : null,
+                        game.getRoundCount()));
+                logger.info("Game: {} : Successfully executed getState", gameId);
+                return ResponseEntity.ok(message);
+            } catch (IllegalArgumentException e) {
+                logger.error("Game: {} : Error executing getState", e.getMessage());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Could not get gameState", "message", e.getMessage()));
+            } catch (Exception e) {
+                logger.error("Game: {} : Error executing getState", e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("error", "Could not get gameState", "message", e.getMessage()));
+            }
     }
 
     @PatchMapping("/{gameId}/state")
