@@ -1,5 +1,6 @@
 package com.brettstine.social_game_backend.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.io.IOException;
 import java.time.Instant;
@@ -251,6 +252,9 @@ public class GameFlowService {
         if (numPlayers < 3) {
             throw new IllegalStateException("Not enough players to assign questions uniquely.");
         }
+
+        // Shuffle the players to randomize the order
+        Collections.shuffle(players);
 
         // Loop through each player and assign them a unique set of 2 questions
         for (int i = 0; i < numPlayers; i++) {
