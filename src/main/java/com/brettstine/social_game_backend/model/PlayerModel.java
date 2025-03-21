@@ -2,6 +2,7 @@ package com.brettstine.social_game_backend.model;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -153,5 +154,18 @@ public class PlayerModel {
 
     public Instant getCreationTime() {
         return creationTime;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;  // Check if the references are the same
+        if (o == null || getClass() != o.getClass()) return false;  // Ensure the object is not null and of the same class
+        PlayerModel that = (PlayerModel) o;  // Cast the object to PlayerModel
+        return Objects.equals(playerId, that.playerId);  // Compare based on the playerId (or other fields if needed)
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(playerId);  // Generate hashCode based on playerId (or other fields)
     }
 }

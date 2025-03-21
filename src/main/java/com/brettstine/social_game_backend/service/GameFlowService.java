@@ -197,7 +197,22 @@ public class GameFlowService {
                 GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_DISPLAY_BALLOT);
                 setGameState(gameWithUpdatedTimer, GameState.DISPLAY_BALLOT);
             } else {
+                // if there only is 1 answer, we need to award all possible votes to the player who submitted that answer
+                List<AnswerModel> answersForCurrentBallotQuestion = answerService.getAnswersForQuestion(unvotedQuestion);
                 voteService.openVotingForQuestion(unvotedQuestion);
+                if (answersForCurrentBallotQuestion.size() == 1) {
+                    List<PlayerModel> playersWhoCantVote = questionService.getPlayersAssignedToQuestion(unvotedQuestion);
+                    for (PlayerModel player : playersWhoCantVote) {
+                        logger.info("{}", player.getName());
+                    }
+                    for (PlayerModel player : playerService.getAllPlayers()) {
+                        if (!playersWhoCantVote.contains(player)) {
+                            logger.info("Game: {} : Auto-submitting vote for player {} on question {}", game.getGameId(), player.getPlayerId(), unvotedQuestion.getQuestionId());
+                            voteService.submitVote(game, player, answersForCurrentBallotQuestion.get(0));
+                            grantPointForVote(answersForCurrentBallotQuestion.get(0));
+                        }
+                    }
+                }
                 gameService.resetTimer(game);
                 GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_DISPLAY_VOTES);
                 setGameState(gameWithUpdatedTimer, GameState.DISPLAY_VOTES);
@@ -212,10 +227,9 @@ public class GameFlowService {
         }
         if (game.getGameState() == GameState.VOTE) {
             // Check is all possible votes have been submitted
-            if (voteService.hasQuestionReceivedAllPossibleVotes(voteService.getCurrentQuestion(game))) {
-                GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_DISPLAY_VOTES);
-                setGameState(gameWithUpdatedTimer, GameState.DISPLAY_VOTES);
-            } else if (game.getTimerEnd().isBefore(Instant.now())) {
+            if (voteService.hasQuestionReceivedAllPossibleVotes(voteService.getCurrentQuestion(game)) ||
+                game.getTimerEnd().isBefore(Instant.now()))
+            {
                 GameModel gameWithUpdatedTimer = gameService.resetTimerWithSeconds(game, TIME_DURATION_DISPLAY_VOTES);
                 setGameState(gameWithUpdatedTimer, GameState.DISPLAY_VOTES);
             }

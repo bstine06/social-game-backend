@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -85,6 +86,7 @@ public class WatchPlayersWebSocketHandler extends TextWebSocketHandler {
     // Method to broadcast the players' list for a specific game
     public void broadcastPlayersList(GameModel game) throws IOException {
         List<PlayerModel> playersInGame = playerService.getAllPlayersByGame(game);
+        Collections.sort(playersInGame, Comparator.comparing(PlayerModel::getScore).reversed());
         WatchPlayersDTO watchPlayersDTO = new WatchPlayersDTO();
         playersInGame.stream().forEach(player -> {
             boolean readyStatus = player.isReady();
